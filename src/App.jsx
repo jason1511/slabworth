@@ -210,7 +210,8 @@ function App() {
   const [manualMatches, setManualMatches] = useState([]);
   const [isSearchingManual, setIsSearchingManual] = useState(false);
   const [manualSearchMessage, setManualSearchMessage] = useState("");
-
+const [showPossibleMatches, setShowPossibleMatches] = useState(true);
+const [showManualSearch, setShowManualSearch] = useState(false);
   function handleImageUpload(event, imageType) {
     const file = event.target.files[0];
 
@@ -516,167 +517,186 @@ function App() {
               )}
 
               {result.possibleMatches?.length > 0 && (
-                <div className="result-card">
-                  <p className="result-label">Possible Matches</p>
-                  <h3>Choose another match</h3>
-                  <p>
-                    If the detected card is wrong, select the closest database
-                    match below.
-                  </p>
+  <div className="result-card collapsible-card">
+    <button
+      type="button"
+      className="section-toggle"
+      onClick={() => setShowPossibleMatches((current) => !current)}
+    >
+      <span>
+        <span className="result-label">Possible Matches</span>
+        <strong>{result.possibleMatches.length} database matches found</strong>
+      </span>
 
-                  <div className="matches-grid">
-                    {result.possibleMatches.map((match) => {
-                      const isSelected =
-                        match.id && match.id === result.detectedCard?.databaseId;
+      <span className="toggle-icon">
+        {showPossibleMatches ? "−" : "+"}
+      </span>
+    </button>
 
-                      return (
-                        <button
-                          key={match.id}
-                          type="button"
-                          className={`match-card ${
-                            isSelected ? "selected-match" : ""
-                          }`}
-                          onClick={() => handleSelectMatch(match)}
-                        >
-                          {match.image && (
-                            <img
-                              src={match.image}
-                              alt={match.name || "Possible match"}
-                            />
-                          )}
+    {showPossibleMatches && (
+      <>
+        <p>
+          If the detected card is wrong, select the closest database match
+          below.
+        </p>
 
-                          <span className="match-name">{match.name}</span>
-                          <span className="match-meta">
-                            {match.set} · {match.number}
-                          </span>
+        <div className="matches-grid">
+          {result.possibleMatches.map((match) => {
+            const isSelected =
+              match.id && match.id === result.detectedCard?.databaseId;
 
-                          {match.rarity && (
-                            <span className="match-rarity">
-                              {match.rarity}
-                            </span>
-                          )}
-
-                          <span
-                            className={`match-strength ${
-                              match.matchStrength || "weak"
-                            }`}
-                          >
-                            {match.matchStrength || "weak"} match ·{" "}
-                            {match.matchScore || 0}%
-                          </span>
-
-                          {match.source && (
-                            <span className="match-source">
-                              {match.source}
-                            </span>
-                          )}
-
-                          <span className="match-action">
-                            {isSelected ? "Selected" : "Use this match"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="result-card">
-                <p className="result-label">Manual Database Search</p>
-                <h3>Search another card</h3>
-                <p>
-                  If the detected card is wrong, search by card name, card
-                  number, or both.
-                </p>
-
-                <div className="manual-search-grid">
-                  <input
-                    type="text"
-                    value={manualName}
-                    placeholder="Card name, e.g. Pikachu"
-                    onChange={(event) => setManualName(event.target.value)}
+            return (
+              <button
+                key={match.id}
+                type="button"
+                className={`match-card ${
+                  isSelected ? "selected-match" : ""
+                }`}
+                onClick={() => handleSelectMatch(match)}
+              >
+                {match.image && (
+                  <img
+                    src={match.image}
+                    alt={match.name || "Possible match"}
                   />
-
-                  <input
-                    type="text"
-                    value={manualNumber}
-                    placeholder="Card number, e.g. 025/165"
-                    onChange={(event) => setManualNumber(event.target.value)}
-                  />
-
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={handleManualSearch}
-                    disabled={isSearchingManual}
-                  >
-                    {isSearchingManual ? "Searching..." : "Search Database"}
-                  </button>
-                </div>
-
-                {manualSearchMessage && (
-                  <p className="manual-search-message">
-                    {manualSearchMessage}
-                  </p>
                 )}
 
-                {manualMatches.length > 0 && (
-                  <div className="matches-grid manual-matches-grid">
-                    {manualMatches.map((match) => {
-                      const isSelected =
-                        match.id && match.id === result.detectedCard?.databaseId;
+                <span className="match-name">{match.name}</span>
+                <span className="match-meta">
+                  {match.set} · {match.number}
+                </span>
 
-                      return (
-                        <button
-                          key={match.id}
-                          type="button"
-                          className={`match-card ${
-                            isSelected ? "selected-match" : ""
-                          }`}
-                          onClick={() => handleSelectMatch(match)}
-                        >
-                          {match.image && (
-                            <img
-                              src={match.image}
-                              alt={match.name || "Manual match"}
-                            />
-                          )}
-
-                          <span className="match-name">{match.name}</span>
-                          <span className="match-meta">
-                            {match.set} · {match.number}
-                          </span>
-
-                          {match.rarity && (
-                            <span className="match-rarity">
-                              {match.rarity}
-                            </span>
-                          )}
-
-                          <span
-                            className={`match-strength ${
-                              match.matchStrength || "weak"
-                            }`}
-                          >
-                            {match.matchStrength || "weak"} match ·{" "}
-                            {match.matchScore || 0}%
-                          </span>
-
-                          {match.source && (
-                            <span className="match-source">
-                              {match.source}
-                            </span>
-                          )}
-
-                          <span className="match-action">
-                            {isSelected ? "Selected" : "Use this match"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                {match.rarity && (
+                  <span className="match-rarity">{match.rarity}</span>
                 )}
-              </div>
+
+                <span
+                  className={`match-strength ${
+                    match.matchStrength || "weak"
+                  }`}
+                >
+                  {match.matchStrength || "weak"} match ·{" "}
+                  {match.matchScore || 0}%
+                </span>
+
+                {match.source && (
+                  <span className="match-source">{match.source}</span>
+                )}
+
+                <span className="match-action">
+                  {isSelected ? "Selected" : "Use this match"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </>
+    )}
+  </div>
+)}
+
+              <div className="result-card collapsible-card">
+  <button
+    type="button"
+    className="section-toggle"
+    onClick={() => setShowManualSearch((current) => !current)}
+  >
+    <span>
+      <span className="result-label">Manual Database Search</span>
+      <strong>Search another card</strong>
+    </span>
+
+    <span className="toggle-icon">{showManualSearch ? "−" : "+"}</span>
+  </button>
+
+  {showManualSearch && (
+    <>
+      <p>
+        If the detected card is wrong, search by card name, card number, or
+        both.
+      </p>
+
+      <div className="manual-search-grid">
+        <input
+          type="text"
+          value={manualName}
+          placeholder="Card name, e.g. Pikachu"
+          onChange={(event) => setManualName(event.target.value)}
+        />
+
+        <input
+          type="text"
+          value={manualNumber}
+          placeholder="Card number, e.g. 025/165"
+          onChange={(event) => setManualNumber(event.target.value)}
+        />
+
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={handleManualSearch}
+          disabled={isSearchingManual}
+        >
+          {isSearchingManual ? "Searching..." : "Search Database"}
+        </button>
+      </div>
+
+      {manualSearchMessage && (
+        <p className="manual-search-message">{manualSearchMessage}</p>
+      )}
+
+      {manualMatches.length > 0 && (
+        <div className="matches-grid manual-matches-grid">
+          {manualMatches.map((match) => {
+            const isSelected =
+              match.id && match.id === result.detectedCard?.databaseId;
+
+            return (
+              <button
+                key={match.id}
+                type="button"
+                className={`match-card ${
+                  isSelected ? "selected-match" : ""
+                }`}
+                onClick={() => handleSelectMatch(match)}
+              >
+                {match.image && (
+                  <img src={match.image} alt={match.name || "Manual match"} />
+                )}
+
+                <span className="match-name">{match.name}</span>
+                <span className="match-meta">
+                  {match.set} · {match.number}
+                </span>
+
+                {match.rarity && (
+                  <span className="match-rarity">{match.rarity}</span>
+                )}
+
+                <span
+                  className={`match-strength ${
+                    match.matchStrength || "weak"
+                  }`}
+                >
+                  {match.matchStrength || "weak"} match ·{" "}
+                  {match.matchScore || 0}%
+                </span>
+
+                {match.source && (
+                  <span className="match-source">{match.source}</span>
+                )}
+
+                <span className="match-action">
+                  {isSelected ? "Selected" : "Use this match"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
+  )}
+</div>
 
               <div className="result-card">
                 <p className="result-label">Condition Grade Estimate</p>
