@@ -1,0 +1,660 @@
+/* ================================
+   THEME VARIABLES
+================================ */
+
+:root {
+  --bg: #f6f3ec;
+  --panel: #ffffff;
+  --text: #231f20;
+  --muted: #6f675d;
+  --primary: #e3350d;
+  --primary-dark: #b92708;
+  --border: #e3dbcf;
+  --soft: #fff7ef;
+  --shadow: 0 18px 40px rgba(35, 31, 32, 0.08);
+}
+
+/* ================================
+   GLOBAL RESET
+================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(227, 53, 13, 0.12), transparent 32rem),
+    var(--bg);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+/* ================================
+   APP SHELL
+================================ */
+
+.app {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 56px 0;
+}
+
+/* ================================
+   INTRO SECTION
+================================ */
+
+.intro-section {
+  max-width: 760px;
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin-bottom: 14px;
+  font-size: clamp(2.7rem, 7vw, 5.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 1.35rem;
+}
+
+h3 {
+  margin-bottom: 10px;
+}
+
+.intro-text {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+/* ================================
+   MAIN TOOL LAYOUT
+================================ */
+
+.tool-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 22px;
+  align-items: start;
+}
+
+.upload-panel,
+.preview-panel,
+.result-panel {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.upload-panel {
+  grid-row: span 2;
+}
+
+.upload-panel p,
+.preview-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ================================
+   UPLOAD PANEL
+================================ */
+
+.upload-grid {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.upload-box {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1.5px dashed var(--border);
+  border-radius: 20px;
+  background: var(--soft);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.upload-box:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  background: #fff2e7;
+}
+
+.upload-box span {
+  font-weight: 800;
+}
+
+.upload-box input {
+  width: 100%;
+  color: var(--muted);
+}
+
+.primary-button {
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.error-message {
+  margin: 14px 0 0;
+  color: var(--primary-dark);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* ================================
+   IMAGE PREVIEW PANEL
+================================ */
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.preview-card {
+  min-height: 280px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #fffaf5;
+}
+
+.preview-card img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #f0ebe4;
+}
+
+/* ================================
+   RESULT PANEL BASE
+================================ */
+
+.result-panel {
+  background: #231f20;
+  color: #ffffff;
+}
+
+.result-panel h2 {
+  color: #ffffff;
+}
+
+.result-card {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.result-card p {
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+.result-label {
+  margin-bottom: 8px;
+  color: #ffcb05 !important;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.result-stack {
+  display: grid;
+  gap: 14px;
+}
+
+/* ================================
+   LOADING RESULT STATE
+================================ */
+
+.loading-card {
+  overflow: hidden;
+}
+
+.loading-bar {
+  position: relative;
+  height: 8px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.loading-bar span {
+  position: absolute;
+  inset: 0;
+  width: 42%;
+  border-radius: 999px;
+  background: #ffcb05;
+  animation: loading-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+/* ================================
+   DETECTED CARD RESULT
+================================ */
+
+.detected-card-layout {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.database-image-frame {
+  width: 112px;
+}
+
+.database-card-image {
+  display: block;
+  width: 100%;
+  max-height: 170px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.database-card-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 156px;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.detected-card-content h3 {
+  margin-bottom: 12px;
+  font-size: 1.35rem;
+  line-height: 1.18;
+}
+
+.card-meta-list {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.card-meta-list p {
+  margin: 0;
+}
+
+.confidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-pill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.14);
+  color: #ffcb05;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.confidence-text {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+/* ================================
+   POSSIBLE MATCHES
+================================ */
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.match-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.match-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 5, 0.55);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.match-card img {
+  width: 64px;
+  border-radius: 8px;
+}
+
+.match-name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.match-meta,
+.match-rarity {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.match-action {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.12);
+  color: #ffcb05;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.selected-match {
+  border-color: rgba(255, 203, 5, 0.8);
+  background: rgba(255, 203, 5, 0.1);
+}
+/* ================================
+   CONDITION GRADE RESULT
+================================ */
+
+.grade-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+
+.grade-score {
+  color: #ffcb05;
+  font-size: 3rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.grade-out-of {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.notes-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.5;
+}
+/* ================================
+   WORTH GRADING RECOMMENDATION
+================================ */
+
+.recommendation-box {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.recommendation-box h3 {
+  margin-bottom: 8px;
+}
+
+.recommendation-box p {
+  margin: 0;
+}
+
+.recommendation-box.positive {
+  border: 1px solid rgba(73, 214, 120, 0.35);
+  background: rgba(73, 214, 120, 0.1);
+}
+
+.recommendation-box.neutral {
+  border: 1px solid rgba(255, 203, 5, 0.28);
+  background: rgba(255, 203, 5, 0.09);
+}
+
+.recommendation-box.warning {
+  border: 1px solid rgba(227, 53, 13, 0.35);
+  background: rgba(227, 53, 13, 0.11);
+}
+/* ================================
+   MANUAL DATABASE SEARCH
+================================ */
+
+.manual-search-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.manual-search-grid input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  outline: none;
+}
+
+.manual-search-grid input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.manual-search-grid input:focus {
+  border-color: rgba(255, 203, 5, 0.65);
+}
+
+.secondary-button {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 203, 5, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.12);
+  color: #ffcb05;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 203, 5, 0.18);
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.manual-search-message {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.manual-matches-grid {
+  margin-top: 14px;
+}
+/* ================================
+   MARKET RESEARCH LINKS
+================================ */
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.link-grid a {
+  display: inline-flex;
+  justify-content: center;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.link-grid a:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 5, 0.6);
+  background: rgba(255, 203, 5, 0.13);
+}
+
+/* ================================
+   DISCLAIMER
+================================ */
+
+.disclaimer-box {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 203, 5, 0.25);
+  border-radius: 18px;
+  background: rgba(255, 203, 5, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ================================
+   RESPONSIVE DESIGN
+================================ */
+
+@media (max-width: 850px) {
+  .app {
+    padding: 36px 0;
+  }
+
+  .tool-layout,
+  .preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-panel {
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .detected-card-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .database-image-frame {
+    width: 128px;
+  }
+
+  .manual-search-grid,
+.matches-grid,
+.link-grid {
+  grid-template-columns: 1fr;
+}
+}
