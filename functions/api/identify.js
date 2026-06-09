@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import {
+  applyBestMatchToResult,
+  searchAllCardDatabases,
+} from "../utils/card-search.js";
 
 function getImageDataUrl(file, base64) {
   return `data:${file.type};base64,${base64}`;
@@ -9,72 +13,6 @@ function cleanJsonText(text) {
     .replace(/```json/g, "")
     .replace(/```/g, "")
     .trim();
-}
-
-function normalizeCardNumber(number) {
-  if (!number) return "";
-
-  return String(number).split("/")[0].trim();
-}
-
-function buildPokemonTcgQueries(card) {
-  const queries = [];
-  const name = card.name?.trim();
-  const number = normalizeCardNumber(card.number);
-
-  if (name && number) {
-    queries.push(`name:"${name}" number:"${number}"`);
-  }
-
-  if (number) {
-    queries.push(`number:"${number}"`);
-  }
-
-  if (name) {
-    queries.push(`name:"${name}"`);
-  }
-
-  return queries;
-}
-function mapPokemonTcgCard(item) {
-  return {
-    source: "pokemon-tcg-api",
-    id: item.id,
-    name: item.name,
-    set: item.set?.name || "",
-    series: item.set?.series || "",
-    number: item.number || "",
-    rarity: item.rarity || "",
-    image: item.images?.small || "",
-    tcgplayerUrl: item.tcgplayer?.url || "",
-    cardmarketUrl: item.cardmarket?.url || "",
-  };
-}
-
-async function searchPokemonTcg(card) {
-  const queries = buildPokemonTcgQueries(card);
-  const allMatches = [];
-
-  for (const query of queries) {
-    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(
-      query
-    )}&pageSize=5`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) continue;
-
-    const data = await response.json();
-    const mappedCards = data.data.map(mapPokemonTcgCard);
-
-    allMatches.push(...mappedCards);
-  }
-
-  const uniqueMatches = Array.from(
-    new Map(allMatches.map((card) => [card.id, card])).values()
-  );
-
-  return uniqueMatches.slice(0, 5);
 }
 
 async function fileToBase64(file) {
@@ -151,10 +89,6 @@ export async function onRequestPost(context) {
       backImageUrl = getImageDataUrl(backImage, backBase64);
     }
 
-    const client = new OpenAI({
-      apiKey: openaiApiKey,
-    });
-
     const imageInputs = [
       {
         type: "input_image",
@@ -170,6 +104,10 @@ export async function onRequestPost(context) {
         detail: "high",
       });
     }
+
+    const client = new OpenAI({
+      apiKey: openaiApiKey,
+    });
 
     const response = await client.responses.create({
       model: "gpt-4.1-mini",
@@ -199,7 +137,19 @@ Use this exact shape:
     "score": 0,
     "label": "",
     "confidence": "",
+    "breakdown": {
+      "centering": 0,
+      "corners": 0,
+      "edges": 0,
+      "surface": 0,
+      "back": 0
+    },
     "notes": []
+  },
+  "photoQuality": {
+    "rating": "",
+    "issues": [],
+    "recommendations": []
   },
   "links": []
 }
@@ -208,6 +158,8 @@ Rules:
 - Identify the card from visible information.
 - Focus on Pokémon cards.
 - If the exact card is uncertain, give the best visible guess and reduce confidence.
+- Extract the card number exactly as printed if visible, including slash formatting like "089/086", "025/165", "SV12", or promo-style numbers.
+- Extract set symbols, set codes, and language clues if visible.
 - grade.score must be a number from 1 to 10, or 0 if unable to estimate.
 - grade.label must be one of:
   "Gem Mint Candidate",
@@ -226,7 +178,22 @@ Rules:
   4-5 = Moderately Played, clear wear but still presentable
   2-3 = Heavily Played, major wear, whitening, bends, scratches, or dents
   1 = Damaged, severe crease, tear, water damage, heavy surface damage, or major structural issue
+- grade.breakdown must include numeric scores from 1 to 10, or 0 if unable to estimate.
+- grade.breakdown.centering = visible front centering quality.
+- grade.breakdown.corners = visible corner sharpness and corner wear.
+- grade.breakdown.edges = visible edge whitening, chipping, or wear.
+- grade.breakdown.surface = visible scratches, dents, print lines, stains, glare-limited surface quality.
+- grade.breakdown.back = back-side condition if back image is provided, otherwise 0.
+- The overall grade.score should be a conservative estimate based on the weakest visible areas, not simply the average.
 - If the image quality is too poor to estimate, use score 0 and label "Unable to Estimate".
+- photoQuality.rating must be one of:
+  "Good",
+  "Acceptable",
+  "Poor",
+  "Unable to Judge"
+- photoQuality.issues should list visible photo problems such as blur, glare, cropped card edges, low resolution, bad lighting, tilt, sleeve reflection, or missing back image.
+- photoQuality.recommendations should give practical advice for taking a better photo, such as using flat lighting, removing sleeve glare, placing the card on a dark surface, or uploading the back image.
+- If the photo is clear enough, still mention strengths such as "Front image is clear enough for visible inspection."
 - This is not an official PSA, CGC, or Beckett grade.
 - For grade notes, mention visible centering, corners, edges, surface, back condition, and photo quality where possible.
 - If only the front image is provided, mention that back-side grading is limited.
@@ -245,73 +212,16 @@ Rules:
       ],
     });
 
-    const text = response.output_text;
-    const parsed = JSON.parse(cleanJsonText(text));
+    const parsed = JSON.parse(cleanJsonText(response.output_text));
 
-    const possibleMatches = await searchPokemonTcg(parsed.detectedCard);
-
-    if (possibleMatches.length > 0) {
-      const bestMatch = possibleMatches[0];
-
-      parsed.detectedCard.name = bestMatch.name;
-      parsed.detectedCard.set = bestMatch.set;
-      parsed.detectedCard.number = bestMatch.number;
-      parsed.detectedCard.rarity = bestMatch.rarity;
-      parsed.detectedCard.databaseId = bestMatch.id;
-      parsed.detectedCard.databaseImage = bestMatch.image;
-      parsed.detectedCard.tcgplayerUrl = bestMatch.tcgplayerUrl;
-      parsed.detectedCard.cardmarketUrl = bestMatch.cardmarketUrl;
-    }
-    if (parsed.detectedCard) {
-  const cardName = parsed.detectedCard.name || "Pokemon card";
-  const cardNumber = parsed.detectedCard.number || "";
-  const queryBase = `${cardName} ${cardNumber}`.trim();
-
-  parsed.links = [
-    {
-      label: "eBay Raw",
-      type: "search",
-      query: `${queryBase} raw`,
-    },
-    {
-      label: "eBay PSA 8",
-      type: "search",
-      query: `${queryBase} PSA 8`,
-    },
-    {
-      label: "eBay PSA 9",
-      type: "search",
-      query: `${queryBase} PSA 9`,
-    },
-    {
-      label: "eBay PSA 10",
-      type: "search",
-      query: `${queryBase} PSA 10`,
-    },
-  ];
-
-  if (parsed.detectedCard.tcgplayerUrl) {
-    parsed.links.push({
-      label: "TCGplayer",
-      type: "direct",
-      url: parsed.detectedCard.tcgplayerUrl,
-    });
-  }
-
-  if (parsed.detectedCard.cardmarketUrl) {
-    parsed.links.push({
-      label: "Cardmarket",
-      type: "direct",
-      url: parsed.detectedCard.cardmarketUrl,
-    });
-  }
-}
-
+    const possibleMatches = await searchAllCardDatabases(parsed.detectedCard);
     parsed.possibleMatches = possibleMatches;
+
+    const finalResult = applyBestMatchToResult(parsed);
 
     return Response.json({
       success: true,
-      result: parsed,
+      result: finalResult,
     });
   } catch (error) {
     return Response.json(

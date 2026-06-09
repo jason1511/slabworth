@@ -10,7 +10,7 @@ function getMarketLinkUrl(link) {
     return link.url;
   }
 
-  return createEbaySearchUrl(link.query);
+  return createEbaySearchUrl(link.query || link.label || "Pokemon card");
 }
 
 function createMarketLinks(card) {
@@ -58,6 +58,60 @@ function createMarketLinks(card) {
   }
 
   return links;
+}
+
+function getBreakdownItems(grade) {
+  const breakdown = grade?.breakdown || {};
+
+  return [
+    {
+      label: "Centering",
+      value: breakdown.centering,
+      description: "Front border alignment",
+    },
+    {
+      label: "Corners",
+      value: breakdown.corners,
+      description: "Corner sharpness and whitening",
+    },
+    {
+      label: "Edges",
+      value: breakdown.edges,
+      description: "Edge wear or chipping",
+    },
+    {
+      label: "Surface",
+      value: breakdown.surface,
+      description: "Scratches, dents, stains, or glare",
+    },
+    {
+      label: "Back",
+      value: breakdown.back,
+      description: "Back-side condition",
+    },
+  ];
+}
+
+function getPhotoQualityTone(rating) {
+  const normalizedRating = rating?.toLowerCase() || "";
+
+  if (normalizedRating === "good") {
+    return "positive";
+  }
+
+  if (normalizedRating === "acceptable") {
+    return "neutral";
+  }
+
+  return "warning";
+}
+
+function getMatchStatusTone(status) {
+  if (status === "confirmed") {
+    return "positive";
+  }
+
+  return "neutral";
 }
 
 function getWorthGradingRecommendation(result) {
@@ -146,20 +200,25 @@ function App() {
   const [backImage, setBackImage] = useState(null);
   const [frontFile, setFrontFile] = useState(null);
   const [backFile, setBackFile] = useState(null);
+
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-const [manualName, setManualName] = useState("");
-const [manualNumber, setManualNumber] = useState("");
-const [manualMatches, setManualMatches] = useState([]);
-const [isSearchingManual, setIsSearchingManual] = useState(false);
-const [manualSearchMessage, setManualSearchMessage] = useState("");
+
+  const [manualName, setManualName] = useState("");
+  const [manualNumber, setManualNumber] = useState("");
+  const [manualMatches, setManualMatches] = useState([]);
+  const [isSearchingManual, setIsSearchingManual] = useState(false);
+  const [manualSearchMessage, setManualSearchMessage] = useState("");
+
   function handleImageUpload(event, imageType) {
     const file = event.target.files[0];
 
     if (!file) return;
 
     setErrorMessage("");
+    setManualMatches([]);
+    setManualSearchMessage("");
 
     const imageUrl = URL.createObjectURL(file);
 
@@ -192,6 +251,8 @@ const [manualSearchMessage, setManualSearchMessage] = useState("");
     setIsLoading(true);
     setErrorMessage("");
     setResult(null);
+    setManualMatches([]);
+    setManualSearchMessage("");
 
     try {
       const response = await fetch("/api/identify", {
@@ -234,51 +295,57 @@ const [manualSearchMessage, setManualSearchMessage] = useState("");
           tcgplayerUrl: match.tcgplayerUrl,
           cardmarketUrl: match.cardmarketUrl,
         },
+        matchStatus: {
+          status: "confirmed",
+          message: "Database match selected by user.",
+        },
         links: createMarketLinks(match),
       };
     });
   }
-async function handleManualSearch() {
-  if (!manualName.trim() && !manualNumber.trim()) {
-    setManualSearchMessage("Enter a card name or card number first.");
-    return;
-  }
 
-  setIsSearchingManual(true);
-  setManualSearchMessage("");
-  setManualMatches([]);
-
-  try {
-    const response = await fetch("/api/search-card", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: manualName,
-        number: manualNumber,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      setManualSearchMessage(data.message || "Manual search failed.");
+  async function handleManualSearch() {
+    if (!manualName.trim() && !manualNumber.trim()) {
+      setManualSearchMessage("Enter a card name or card number first.");
       return;
     }
 
-    setManualMatches(data.matches || []);
+    setIsSearchingManual(true);
+    setManualSearchMessage("");
+    setManualMatches([]);
 
-    if (!data.matches || data.matches.length === 0) {
-      setManualSearchMessage("No matching cards found.");
+    try {
+      const response = await fetch("/api/search-card", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: manualName,
+          number: manualNumber,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setManualSearchMessage(data.message || "Manual search failed.");
+        return;
+      }
+
+      setManualMatches(data.matches || []);
+
+      if (!data.matches || data.matches.length === 0) {
+        setManualSearchMessage("No matching cards found.");
+      }
+    } catch (error) {
+      console.error(error);
+      setManualSearchMessage("Could not connect to the manual search API.");
+    } finally {
+      setIsSearchingManual(false);
     }
-  } catch (error) {
-    console.error(error);
-    setManualSearchMessage("Could not connect to the manual search API.");
-  } finally {
-    setIsSearchingManual(false);
   }
-}
+
   return (
     <main className="app">
       <section className="intro-section">
@@ -364,6 +431,7 @@ async function handleManualSearch() {
                 Reading the card image, estimating condition, and searching for
                 matching Pokémon card data.
               </p>
+
               <div className="loading-bar">
                 <span></span>
               </div>
@@ -428,7 +496,26 @@ async function handleManualSearch() {
                 </div>
               </div>
 
-              {result.possibleMatches?.length > 1 && (
+              {result.matchStatus && (
+                <div className="result-card">
+                  <p className="result-label">Database Match Status</p>
+
+                  <div
+                    className={`recommendation-box ${getMatchStatusTone(
+                      result.matchStatus.status
+                    )}`}
+                  >
+                    <h3>
+                      {result.matchStatus.status === "confirmed"
+                        ? "Confirmed Match"
+                        : "Needs Confirmation"}
+                    </h3>
+                    <p>{result.matchStatus.message}</p>
+                  </div>
+                </div>
+              )}
+
+              {result.possibleMatches?.length > 0 && (
                 <div className="result-card">
                   <p className="result-label">Possible Matches</p>
                   <h3>Choose another match</h3>
@@ -469,6 +556,21 @@ async function handleManualSearch() {
                             </span>
                           )}
 
+                          <span
+                            className={`match-strength ${
+                              match.matchStrength || "weak"
+                            }`}
+                          >
+                            {match.matchStrength || "weak"} match ·{" "}
+                            {match.matchScore || 0}%
+                          </span>
+
+                          {match.source && (
+                            <span className="match-source">
+                              {match.source}
+                            </span>
+                          )}
+
                           <span className="match-action">
                             {isSelected ? "Selected" : "Use this match"}
                           </span>
@@ -478,77 +580,104 @@ async function handleManualSearch() {
                   </div>
                 </div>
               )}
+
               <div className="result-card">
-  <p className="result-label">Manual Database Search</p>
-  <h3>Search another card</h3>
-  <p>
-    If the detected card is wrong, search by card name, card number, or both.
-  </p>
+                <p className="result-label">Manual Database Search</p>
+                <h3>Search another card</h3>
+                <p>
+                  If the detected card is wrong, search by card name, card
+                  number, or both.
+                </p>
 
-  <div className="manual-search-grid">
-    <input
-      type="text"
-      value={manualName}
-      placeholder="Card name, e.g. Pikachu"
-      onChange={(event) => setManualName(event.target.value)}
-    />
+                <div className="manual-search-grid">
+                  <input
+                    type="text"
+                    value={manualName}
+                    placeholder="Card name, e.g. Pikachu"
+                    onChange={(event) => setManualName(event.target.value)}
+                  />
 
-    <input
-      type="text"
-      value={manualNumber}
-      placeholder="Card number, e.g. 025/165"
-      onChange={(event) => setManualNumber(event.target.value)}
-    />
+                  <input
+                    type="text"
+                    value={manualNumber}
+                    placeholder="Card number, e.g. 025/165"
+                    onChange={(event) => setManualNumber(event.target.value)}
+                  />
 
-    <button
-      type="button"
-      className="secondary-button"
-      onClick={handleManualSearch}
-      disabled={isSearchingManual}
-    >
-      {isSearchingManual ? "Searching..." : "Search Database"}
-    </button>
-  </div>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={handleManualSearch}
+                    disabled={isSearchingManual}
+                  >
+                    {isSearchingManual ? "Searching..." : "Search Database"}
+                  </button>
+                </div>
 
-  {manualSearchMessage && (
-    <p className="manual-search-message">{manualSearchMessage}</p>
-  )}
+                {manualSearchMessage && (
+                  <p className="manual-search-message">
+                    {manualSearchMessage}
+                  </p>
+                )}
 
-  {manualMatches.length > 0 && (
-    <div className="matches-grid manual-matches-grid">
-      {manualMatches.map((match) => {
-        const isSelected =
-          match.id && match.id === result.detectedCard?.databaseId;
+                {manualMatches.length > 0 && (
+                  <div className="matches-grid manual-matches-grid">
+                    {manualMatches.map((match) => {
+                      const isSelected =
+                        match.id && match.id === result.detectedCard?.databaseId;
 
-        return (
-          <button
-            key={match.id}
-            type="button"
-            className={`match-card ${isSelected ? "selected-match" : ""}`}
-            onClick={() => handleSelectMatch(match)}
-          >
-            {match.image && (
-              <img src={match.image} alt={match.name || "Manual match"} />
-            )}
+                      return (
+                        <button
+                          key={match.id}
+                          type="button"
+                          className={`match-card ${
+                            isSelected ? "selected-match" : ""
+                          }`}
+                          onClick={() => handleSelectMatch(match)}
+                        >
+                          {match.image && (
+                            <img
+                              src={match.image}
+                              alt={match.name || "Manual match"}
+                            />
+                          )}
 
-            <span className="match-name">{match.name}</span>
-            <span className="match-meta">
-              {match.set} · {match.number}
-            </span>
+                          <span className="match-name">{match.name}</span>
+                          <span className="match-meta">
+                            {match.set} · {match.number}
+                          </span>
 
-            {match.rarity && (
-              <span className="match-rarity">{match.rarity}</span>
-            )}
+                          {match.rarity && (
+                            <span className="match-rarity">
+                              {match.rarity}
+                            </span>
+                          )}
 
-            <span className="match-action">
-              {isSelected ? "Selected" : "Use this match"}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  )}
-</div>
+                          <span
+                            className={`match-strength ${
+                              match.matchStrength || "weak"
+                            }`}
+                          >
+                            {match.matchStrength || "weak"} match ·{" "}
+                            {match.matchScore || 0}%
+                          </span>
+
+                          {match.source && (
+                            <span className="match-source">
+                              {match.source}
+                            </span>
+                          )}
+
+                          <span className="match-action">
+                            {isSelected ? "Selected" : "Use this match"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="result-card">
                 <p className="result-label">Condition Grade Estimate</p>
 
@@ -562,6 +691,29 @@ async function handleManualSearch() {
                 <h3>{result.grade?.label || "Unable to Estimate"}</h3>
                 <p>Confidence: {result.grade?.confidence || "Unknown"}</p>
 
+                <div className="breakdown-grid">
+                  {getBreakdownItems(result.grade).map((item) => (
+                    <div className="breakdown-item" key={item.label}>
+                      <div className="breakdown-header">
+                        <span>{item.label}</span>
+                        <strong>
+                          {item.value > 0 ? `${item.value}/10` : "N/A"}
+                        </strong>
+                      </div>
+
+                      <div className="breakdown-bar">
+                        <span
+                          style={{
+                            width: `${item.value > 0 ? item.value * 10 : 0}%`,
+                          }}
+                        ></span>
+                      </div>
+
+                      <p>{item.description}</p>
+                    </div>
+                  ))}
+                </div>
+
                 {result.grade?.notes?.length > 0 && (
                   <ul className="notes-list">
                     {result.grade.notes.map((note) => (
@@ -569,6 +721,44 @@ async function handleManualSearch() {
                     ))}
                   </ul>
                 )}
+              </div>
+
+              <div className="result-card">
+                <p className="result-label">Photo Quality</p>
+
+                <div
+                  className={`photo-quality-box ${getPhotoQualityTone(
+                    result.photoQuality?.rating
+                  )}`}
+                >
+                  <h3>{result.photoQuality?.rating || "Unable to Judge"}</h3>
+
+                  {result.photoQuality?.issues?.length > 0 && (
+                    <>
+                      <p className="quality-subtitle">Detected issues</p>
+                      <ul className="quality-list">
+                        {result.photoQuality.issues.map((issue) => (
+                          <li key={issue}>{issue}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+
+                  {result.photoQuality?.recommendations?.length > 0 && (
+                    <>
+                      <p className="quality-subtitle">
+                        Recommended improvements
+                      </p>
+                      <ul className="quality-list">
+                        {result.photoQuality.recommendations.map(
+                          (recommendation) => (
+                            <li key={recommendation}>{recommendation}</li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="result-card">
