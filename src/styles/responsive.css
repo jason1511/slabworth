@@ -50,8 +50,14 @@
   .manual-search-grid,
   .matches-grid,
   .link-grid,
-  .market-price-grid,
+  .market-summary-grid,
+  .market-link-grid,
   .breakdown-grid {
     grid-template-columns: 1fr;
+  }
+
+  .market-result-header,
+  .market-price-row-top {
+    display: grid;
   }
 }

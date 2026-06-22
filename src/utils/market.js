@@ -21,36 +21,43 @@ export function createMarketLinks(card) {
       label: "eBay",
       marketplace: "ebay",
       query: queryBase,
+      description: "Search active listings and sold comparisons.",
     },
     {
       label: "PriceCharting",
       marketplace: "pricecharting",
       query: queryBase,
+      description: "Check historical collector pricing.",
     },
     {
       label: "TCGplayer Search",
       marketplace: "tcgplayer",
       query: queryBase,
+      description: "Search raw card marketplace listings.",
     },
     {
       label: "Cardmarket Search",
       marketplace: "cardmarket",
       query: queryBase,
+      description: "Search European market listings.",
     },
     {
       label: "eBay PSA 8",
       marketplace: "ebay",
       query: `${queryBase} PSA 8`,
+      description: "Compare graded PSA 8 listings.",
     },
     {
       label: "eBay PSA 9",
       marketplace: "ebay",
       query: `${queryBase} PSA 9`,
+      description: "Compare graded PSA 9 listings.",
     },
     {
       label: "eBay PSA 10",
       marketplace: "ebay",
       query: `${queryBase} PSA 10`,
+      description: "Compare graded PSA 10 listings.",
     },
   ];
 
@@ -59,6 +66,7 @@ export function createMarketLinks(card) {
       label: "TCGplayer Page",
       type: "direct",
       url: card.tcgplayerUrl,
+      description: "Open the matched TCGplayer product page.",
     });
   }
 
@@ -67,6 +75,7 @@ export function createMarketLinks(card) {
       label: "Cardmarket Page",
       type: "direct",
       url: card.cardmarketUrl,
+      description: "Open the matched Cardmarket product page.",
     });
   }
 
@@ -85,6 +94,65 @@ export function hasMarketResults(marketResults) {
   return Array.isArray(marketResults) && marketResults.length > 0;
 }
 
+export function getValidPrices(marketResult) {
+  if (!marketResult?.prices?.length) {
+    return [];
+  }
+
+  return marketResult.prices
+    .map((price) => ({
+      ...price,
+      numericValue: Number(price.value),
+    }))
+    .filter((price) => !Number.isNaN(price.numericValue));
+}
+
+export function getAllValidPrices(marketResults) {
+  return (marketResults || []).flatMap((marketResult) =>
+    getValidPrices(marketResult).map((price) => ({
+      ...price,
+      marketplace: marketResult.marketplace,
+      currency: marketResult.currency,
+    }))
+  );
+}
+
+export function getMarketSummary(marketResults) {
+  const allPrices = getAllValidPrices(marketResults);
+
+  if (!allPrices.length) {
+    return {
+      hasPrices: false,
+      sourceCount: marketResults?.length || 0,
+      priceCount: 0,
+      lowest: null,
+      highest: null,
+      bestMarket: null,
+    };
+  }
+
+  const sortedPrices = [...allPrices].sort(
+    (a, b) => a.numericValue - b.numericValue
+  );
+
+  const lowest = sortedPrices[0];
+  const highest = sortedPrices[sortedPrices.length - 1];
+
+  const preferredMarketPrice =
+    allPrices.find((price) =>
+      price.label.toLowerCase().includes("market")
+    ) || lowest;
+
+  return {
+    hasPrices: true,
+    sourceCount: marketResults.length,
+    priceCount: allPrices.length,
+    lowest,
+    highest,
+    bestMarket: preferredMarketPrice,
+  };
+}
+
 export function formatPrice(value, currency = "USD") {
   if (value === null || value === undefined || value === "") {
     return "N/A";
@@ -100,4 +168,21 @@ export function formatPrice(value, currency = "USD") {
     style: "currency",
     currency,
   }).format(numericValue);
+}
+
+export function getPriceBarWidth(value, maxValue) {
+  const numericValue = Number(value);
+  const numericMax = Number(maxValue);
+
+  if (
+    Number.isNaN(numericValue) ||
+    Number.isNaN(numericMax) ||
+    numericMax <= 0
+  ) {
+    return "0%";
+  }
+
+  const percentage = Math.max(8, Math.min((numericValue / numericMax) * 100, 100));
+
+  return `${percentage}%`;
 }

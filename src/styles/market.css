@@ -2,6 +2,57 @@
    MARKET RESULTS
 ================================ */
 
+.market-results-card {
+  overflow: hidden;
+}
+
+.market-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.market-summary-card {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.market-summary-card.highlight {
+  border-color: rgba(255, 203, 5, 0.35);
+  background:
+    radial-gradient(circle at top right, rgba(255, 203, 5, 0.16), transparent 12rem),
+    rgba(255, 255, 255, 0.055);
+}
+
+.market-summary-card.muted {
+  margin-top: 14px;
+}
+
+.market-summary-card span {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.market-summary-card strong {
+  display: block;
+  color: #ffcb05;
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.market-summary-card p {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+}
+
 .market-results-stack {
   display: grid;
   gap: 12px;
@@ -19,7 +70,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .market-result-header h3 {
@@ -44,31 +95,122 @@
   text-decoration: none;
 }
 
-.market-price-grid {
+.market-price-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-.market-price-item {
+.market-price-row {
   display: grid;
-  gap: 4px;
+  gap: 7px;
   padding: 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
 }
 
-.market-price-item span {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.75rem;
-  font-weight: 800;
+.market-price-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.market-price-row-top span {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.8rem;
+  font-weight: 850;
   text-transform: capitalize;
 }
 
-.market-price-item strong {
-  color: #ffcb05;
-  font-size: 1rem;
+.market-price-row-top strong {
+  color: #ffffff;
+  font-size: 0.95rem;
 }
+
+.market-visual-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.market-visual-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffcb05;
+}
+
+.market-fallback-section {
+  margin-top: 14px;
+}
+
+.market-link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.market-link-grid a {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.075);
+  color: #ffffff;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.market-link-grid a:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 5, 0.6);
+  background: rgba(255, 203, 5, 0.12);
+}
+
+.market-link-grid strong {
+  color: #ffcb05;
+  font-size: 0.88rem;
+}
+
+.market-link-grid span {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.market-search-details {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.market-search-details summary {
+  color: #ffcb05;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.market-disclaimer {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 203, 5, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 203, 5, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* Backward compatibility if old link-grid is still used somewhere */
 
 .link-grid {
   display: grid;
@@ -89,14 +231,4 @@
   font-weight: 800;
   text-align: center;
   text-decoration: none;
-  transition:
-    transform 160ms ease,
-    background 160ms ease,
-    border-color 160ms ease;
-}
-
-.link-grid a:hover {
-  transform: translateY(-1px);
-  border-color: rgba(255, 203, 5, 0.6);
-  background: rgba(255, 203, 5, 0.13);
 }
