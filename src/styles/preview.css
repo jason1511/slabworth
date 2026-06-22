@@ -1,0 +1,31 @@
+/* ================================
+   IMAGE PREVIEW PANEL
+================================ */
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.preview-card {
+  min-height: 280px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #fffaf5;
+}
+
+.preview-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.preview-card img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #f0ebe4;
+}

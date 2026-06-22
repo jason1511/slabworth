@@ -1,1 +1,12 @@
+name = "slabworth"
 compatibility_date = "2026-06-05"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "slabworth_history"
+database_name = "slabworth-history"
+database_id = "2f613a5d-6bd5-462d-a8e8-0f46490f91ce"
+
+[[r2_buckets]]
+bucket_name = "slabworth-card-images"
+binding = "slabworth_card_images"

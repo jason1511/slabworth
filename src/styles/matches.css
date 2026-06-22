@@ -1,0 +1,140 @@
+/* ================================
+   POSSIBLE MATCHES
+================================ */
+
+.matches-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.match-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.match-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 5, 0.55);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.match-card img {
+  width: 72px;
+  max-height: 100px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.match-name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.match-meta,
+.match-rarity {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.match-strength,
+.match-source {
+  width: fit-content;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.match-strength {
+  padding: 5px 8px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.match-strength.strong {
+  background: rgba(73, 214, 120, 0.15);
+  color: #7df0a0;
+}
+
+.match-strength.medium {
+  background: rgba(255, 203, 5, 0.14);
+  color: #ffcb05;
+}
+
+.match-strength.weak {
+  background: rgba(227, 53, 13, 0.14);
+  color: #ff9b82;
+}
+
+.match-action {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.12);
+  color: #ffcb05;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.selected-match {
+  border-color: rgba(255, 203, 5, 0.8);
+  background: rgba(255, 203, 5, 0.1);
+}
+
+/* ================================
+   MANUAL DATABASE SEARCH
+================================ */
+
+.manual-search-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.manual-search-grid input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  outline: none;
+}
+
+.manual-search-grid input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.manual-search-grid input:focus {
+  border-color: rgba(255, 203, 5, 0.65);
+}
+
+.manual-search-message {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.manual-matches-grid {
+  margin-top: 14px;
+}

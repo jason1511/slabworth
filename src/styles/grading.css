@@ -1,0 +1,160 @@
+/* ================================
+   CONDITION GRADE RESULT
+================================ */
+
+.grade-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 6px 0 10px;
+}
+
+.grade-score {
+  color: #ffcb05;
+  font-size: 3rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.grade-out-of {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.breakdown-item {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.breakdown-header strong {
+  color: #ffcb05;
+}
+
+.breakdown-bar {
+  height: 7px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.breakdown-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffcb05;
+}
+
+.breakdown-item p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.notes-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.5;
+}
+
+/* ================================
+   PHOTO QUALITY RESULT
+================================ */
+
+.photo-quality-box {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.photo-quality-box h3 {
+  margin-bottom: 10px;
+}
+
+.photo-quality-box.positive {
+  border: 1px solid rgba(73, 214, 120, 0.35);
+  background: rgba(73, 214, 120, 0.1);
+}
+
+.photo-quality-box.neutral {
+  border: 1px solid rgba(255, 203, 5, 0.28);
+  background: rgba(255, 203, 5, 0.09);
+}
+
+.photo-quality-box.warning {
+  border: 1px solid rgba(227, 53, 13, 0.35);
+  background: rgba(227, 53, 13, 0.11);
+}
+
+.quality-subtitle {
+  margin: 12px 0 6px;
+  color: #ffffff !important;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.quality-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+  color: rgba(255, 255, 255, 0.76);
+  line-height: 1.45;
+}
+
+/* ================================
+   WORTH GRADING / STATUS BOXES
+================================ */
+
+.recommendation-box {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.recommendation-box h3 {
+  margin-bottom: 8px;
+}
+
+.recommendation-box p {
+  margin: 0;
+}
+
+.recommendation-box.positive {
+  border: 1px solid rgba(73, 214, 120, 0.35);
+  background: rgba(73, 214, 120, 0.1);
+}
+
+.recommendation-box.neutral {
+  border: 1px solid rgba(255, 203, 5, 0.28);
+  background: rgba(255, 203, 5, 0.09);
+}
+
+.recommendation-box.warning {
+  border: 1px solid rgba(227, 53, 13, 0.35);
+  background: rgba(227, 53, 13, 0.11);
+}

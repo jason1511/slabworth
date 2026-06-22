@@ -1,0 +1,101 @@
+/* ================================
+   UPLOAD PANEL
+================================ */
+
+.upload-panel p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.upload-grid {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.upload-box {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1.5px dashed var(--border);
+  border-radius: 20px;
+  background: var(--soft);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.upload-box:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  background: #fff2e7;
+}
+
+.upload-box span {
+  font-weight: 800;
+}
+
+.upload-box input {
+  width: 100%;
+  color: var(--muted);
+}
+
+.primary-button {
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.secondary-button {
+  grid-column: 1 / -1;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 203, 5, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.12);
+  color: #ffcb05;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: rgba(255, 203, 5, 0.18);
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.error-message {
+  margin: 14px 0 0;
+  color: var(--primary-dark);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.5;
+}

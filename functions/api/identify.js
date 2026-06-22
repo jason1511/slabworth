@@ -3,6 +3,16 @@ import {
   applyBestMatchToResult,
   searchAllCardDatabases,
 } from "../utils/card-search.js";
+import { cleanupAfterSave } from "../utils/cleanup.js";
+import { createAnalysisId, saveAnalysis } from "../utils/history-store.js";
+import { createImageKey, saveImageToR2 } from "../utils/r2-images.js";
+
+const SUPPORTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 
 function getImageDataUrl(file, base64) {
   return `data:${file.type};base64,${base64}`;
@@ -28,96 +38,81 @@ async function fileToBase64(file) {
   return btoa(binary);
 }
 
-export async function onRequestPost(context) {
-  try {
-    const openaiApiKey = context.env.OPENAI_API_KEY;
+function validateImageFile(file, label) {
+  if (!file) {
+    return `${label} image is required.`;
+  }
 
-    if (!openaiApiKey) {
-      return Response.json(
-        {
-          success: false,
-          message: "Missing OPENAI_API_KEY environment variable.",
-        },
-        { status: 500 }
-      );
-    }
+  if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+    return `${label} image must be a JPEG, PNG, WEBP, or GIF image.`;
+  }
 
-    const formData = await context.request.formData();
+  return "";
+}
 
-    const frontImage = formData.get("frontImage");
-    const backImage = formData.get("backImage");
+async function saveUploadedImages({ bucket, analysisId, frontImage, backImage }) {
+  const frontImageKey = createImageKey({
+    analysisId,
+    side: "front",
+    file: frontImage,
+  });
 
-    if (!frontImage) {
-      return Response.json(
-        {
-          success: false,
-          message: "Front image is required.",
-        },
-        { status: 400 }
-      );
-    }
+  await saveImageToR2({
+    bucket,
+    key: frontImageKey,
+    file: frontImage,
+  });
 
-    const supportedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  let backImageKey = "";
 
-    if (!supportedTypes.includes(frontImage.type)) {
-      return Response.json(
-        {
-          success: false,
-          message: "Please upload a JPEG, PNG, WEBP, or GIF image.",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (backImage && !supportedTypes.includes(backImage.type)) {
-      return Response.json(
-        {
-          success: false,
-          message: "Back image must be a JPEG, PNG, WEBP, or GIF image.",
-        },
-        { status: 400 }
-      );
-    }
-
-    const frontBase64 = await fileToBase64(frontImage);
-    const frontImageUrl = getImageDataUrl(frontImage, frontBase64);
-
-    let backImageUrl = null;
-
-    if (backImage) {
-      const backBase64 = await fileToBase64(backImage);
-      backImageUrl = getImageDataUrl(backImage, backBase64);
-    }
-
-    const imageInputs = [
-      {
-        type: "input_image",
-        image_url: frontImageUrl,
-        detail: "high",
-      },
-    ];
-
-    if (backImageUrl) {
-      imageInputs.push({
-        type: "input_image",
-        image_url: backImageUrl,
-        detail: "high",
-      });
-    }
-
-    const client = new OpenAI({
-      apiKey: openaiApiKey,
+  if (backImage) {
+    backImageKey = createImageKey({
+      analysisId,
+      side: "back",
+      file: backImage,
     });
 
-    const response = await client.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `
+    await saveImageToR2({
+      bucket,
+      key: backImageKey,
+      file: backImage,
+    });
+  }
+
+  return {
+    frontImageKey,
+    backImageKey,
+  };
+}
+
+async function buildImageInputs({ frontImage, backImage }) {
+  const frontBase64 = await fileToBase64(frontImage);
+  const frontImageUrl = getImageDataUrl(frontImage, frontBase64);
+
+  const imageInputs = [
+    {
+      type: "input_image",
+      image_url: frontImageUrl,
+      detail: "high",
+    },
+  ];
+
+  if (backImage) {
+    const backBase64 = await fileToBase64(backImage);
+    const backImageUrl = getImageDataUrl(backImage, backBase64);
+
+    imageInputs.push({
+      type: "input_image",
+      image_url: backImageUrl,
+      detail: "high",
+    });
+  }
+
+  return imageInputs;
+}
+
+function buildPrompt() {
+  return `
 You are helping build a Pokémon card identification and grade-estimation web tool.
 
 Analyze the uploaded Pokémon card image or images.
@@ -204,24 +199,186 @@ Rules:
   { "label": "Search PSA 10", "query": "..." }
 - Use the detected card name and number in the link queries.
 - Rarity is not the same as grade. Rarity comes from the card database if available. Grade is only the physical condition estimate.
-              `.trim(),
-            },
-            ...imageInputs,
-          ],
+  `.trim();
+}
+
+async function analyzeCardWithOpenAI({ apiKey, imageInputs }) {
+  const client = new OpenAI({
+    apiKey,
+  });
+
+  const response = await client.responses.create({
+    model: "gpt-4.1-mini",
+    input: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: buildPrompt(),
+          },
+          ...imageInputs,
+        ],
+      },
+    ],
+  });
+
+  return JSON.parse(cleanJsonText(response.output_text));
+}
+
+function addHistoryMetadata({
+  result,
+  analysisId,
+  sessionId,
+  frontImageKey,
+  backImageKey,
+}) {
+  return {
+    ...result,
+    analysis: {
+      id: analysisId,
+      sessionId,
+      frontImageKey,
+      backImageKey,
+      frontImageUrl: `/api/image/${encodeURIComponent(frontImageKey)}`,
+      backImageUrl: backImageKey
+        ? `/api/image/${encodeURIComponent(backImageKey)}`
+        : "",
+    },
+  };
+}
+
+export async function onRequestPost(context) {
+  try {
+    const openaiApiKey = context.env.OPENAI_API_KEY;
+    const db = context.env.slabworth_history;
+    const bucket = context.env.slabworth_card_images;
+
+    if (!openaiApiKey) {
+      return Response.json(
+        {
+          success: false,
+          message: "Missing OPENAI_API_KEY environment variable.",
         },
-      ],
+        { status: 500 }
+      );
+    }
+
+    if (!db) {
+      return Response.json(
+        {
+          success: false,
+          message: "Missing slabworth_history D1 binding.",
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!bucket) {
+      return Response.json(
+        {
+          success: false,
+          message: "Missing slabworth_card_images R2 binding.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const formData = await context.request.formData();
+
+    const frontImage = formData.get("frontImage");
+    const backImage = formData.get("backImage");
+    const sessionId = formData.get("sessionId") || "";
+
+    if (!sessionId) {
+      return Response.json(
+        {
+          success: false,
+          message: "Missing session ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const frontError = validateImageFile(frontImage, "Front");
+
+    if (frontError) {
+      return Response.json(
+        {
+          success: false,
+          message: frontError,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (backImage) {
+      const backError = validateImageFile(backImage, "Back");
+
+      if (backError) {
+        return Response.json(
+          {
+            success: false,
+            message: backError,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    const analysisId = createAnalysisId();
+
+    const { frontImageKey, backImageKey } = await saveUploadedImages({
+      bucket,
+      analysisId,
+      frontImage,
+      backImage,
     });
 
-    const parsed = JSON.parse(cleanJsonText(response.output_text));
+    const imageInputs = await buildImageInputs({
+      frontImage,
+      backImage,
+    });
+
+    const parsed = await analyzeCardWithOpenAI({
+      apiKey: openaiApiKey,
+      imageInputs,
+    });
 
     const possibleMatches = await searchAllCardDatabases(parsed.detectedCard);
     parsed.possibleMatches = possibleMatches;
 
     const finalResult = applyBestMatchToResult(parsed);
 
+    const resultWithHistory = addHistoryMetadata({
+      result: finalResult,
+      analysisId,
+      sessionId,
+      frontImageKey,
+      backImageKey,
+    });
+
+    await saveAnalysis({
+      db,
+      analysisId,
+      sessionId,
+      result: resultWithHistory,
+      frontImageKey,
+      backImageKey,
+    });
+
+    await cleanupAfterSave({
+      db,
+      bucket,
+      sessionId,
+      keepPerSession: 20,
+      expireAfterDays: 30,
+    });
+
     return Response.json({
       success: true,
-      result: finalResult,
+      analysisId,
+      result: resultWithHistory,
     });
   } catch (error) {
     return Response.json(

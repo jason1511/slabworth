@@ -9,8 +9,7 @@ function normalizeCardNumber(number) {
   if (!number) return "";
 
   return String(number)
-    .split("/")
-    [0]
+    .split("/")[0]
     .replace(/[^\p{L}\p{N}]+/gu, "")
     .trim();
 }
@@ -45,7 +44,8 @@ function mapPokemonTcgCard(item) {
     image: item.images?.small || "",
     tcgplayerUrl: item.tcgplayer?.url || "",
     cardmarketUrl: item.cardmarket?.url || "",
-    matchScore: 0,
+marketResults: createPokemonTcgMarketResults(item),
+matchScore: 0,
     matchStrength: "weak",
     matchReasons: [],
   };
@@ -66,7 +66,8 @@ function mapTcgdexCard(item, language) {
     image,
     tcgplayerUrl: "",
     cardmarketUrl: "",
-    matchScore: 0,
+marketResults: createTcgdexMarketResults(item),
+matchScore: 0,
     matchStrength: "weak",
     matchReasons: [],
   };
@@ -268,7 +269,133 @@ async function searchTcgdex(card) {
 
   return allMatches;
 }
+function createPokemonTcgMarketResults(item) {
+  const results = [];
 
+  if (item.tcgplayer?.prices) {
+    const prices = [];
+
+    for (const [variant, data] of Object.entries(item.tcgplayer.prices)) {
+      prices.push(
+        {
+          label: `${variant} low`,
+          value: data.low,
+        },
+        {
+          label: `${variant} market`,
+          value: data.market,
+        },
+        {
+          label: `${variant} direct low`,
+          value: data.directLow,
+        }
+      );
+    }
+
+    results.push({
+      marketplace: "TCGplayer",
+      currency: "USD",
+      description: "Direct price data from the Pokémon TCG API card object.",
+      url: item.tcgplayer.url || "",
+      prices: prices.filter((price) => price.value !== undefined),
+    });
+  }
+
+  if (item.cardmarket?.prices) {
+    const data = item.cardmarket.prices;
+
+    results.push({
+      marketplace: "Cardmarket",
+      currency: "EUR",
+      description: "Direct price data from the Pokémon TCG API card object.",
+      url: item.cardmarket.url || "",
+      prices: [
+        {
+          label: "Average sell price",
+          value: data.averageSellPrice,
+        },
+        {
+          label: "Low price",
+          value: data.lowPrice,
+        },
+        {
+          label: "Trend price",
+          value: data.trendPrice,
+        },
+        {
+          label: "Average 7 days",
+          value: data.avg7,
+        },
+        {
+          label: "Average 30 days",
+          value: data.avg30,
+        },
+      ].filter((price) => price.value !== undefined),
+    });
+  }
+
+  return results.filter((result) => result.prices.length > 0);
+}
+
+function createTcgdexMarketResults(item) {
+  const results = [];
+
+  if (item.pricing?.tcgplayer) {
+    const data = item.pricing.tcgplayer;
+
+    results.push({
+      marketplace: "TCGplayer",
+      currency: "USD",
+      description: "Direct price data from TCGdex when available.",
+      url: data.url || "",
+      prices: [
+        {
+          label: "Market",
+          value: data.market,
+        },
+        {
+          label: "Low",
+          value: data.low,
+        },
+        {
+          label: "Mid",
+          value: data.mid,
+        },
+        {
+          label: "High",
+          value: data.high,
+        },
+      ].filter((price) => price.value !== undefined),
+    });
+  }
+
+  if (item.pricing?.cardmarket) {
+    const data = item.pricing.cardmarket;
+
+    results.push({
+      marketplace: "Cardmarket",
+      currency: "EUR",
+      description: "Direct price data from TCGdex when available.",
+      url: data.url || "",
+      prices: [
+        {
+          label: "Average sell price",
+          value: data.averageSellPrice,
+        },
+        {
+          label: "Low price",
+          value: data.lowPrice,
+        },
+        {
+          label: "Trend price",
+          value: data.trendPrice,
+        },
+      ].filter((price) => price.value !== undefined),
+    });
+  }
+
+  return results.filter((result) => result.prices.length > 0);
+}
 function buildMarketLinks(card) {
   const cardName = card?.name || "Pokemon card";
   const cardNumber = card?.number || "";
@@ -353,7 +480,7 @@ export function applyBestMatchToResult(parsed) {
     parsed.detectedCard.databaseImage = bestMatch.image;
     parsed.detectedCard.tcgplayerUrl = bestMatch.tcgplayerUrl;
     parsed.detectedCard.cardmarketUrl = bestMatch.cardmarketUrl;
-
+    parsed.marketResults = bestMatch.marketResults || [];
     parsed.matchStatus = {
       status: "confirmed",
       message: "Strong database match found.",
@@ -368,7 +495,7 @@ export function applyBestMatchToResult(parsed) {
     message:
       "Only medium or weak matches were found. The detected card has not been auto-confirmed.",
   };
-
+  parsed.marketResults = [];
   parsed.links = buildMarketLinks(parsed.detectedCard);
 
   return parsed;

@@ -1,0 +1,246 @@
+/* ================================
+   RESULT PANEL BASE
+================================ */
+
+.result-panel {
+  background: #231f20;
+  color: #ffffff;
+}
+
+.result-panel h2 {
+  color: #ffffff;
+}
+
+.result-card {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.result-card p {
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+.result-label {
+  margin-bottom: 8px;
+  color: #ffcb05 !important;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.result-stack {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.result-stack > .detected-card-layout,
+.result-stack > .disclaimer-box {
+  grid-column: 1 / -1;
+}
+
+.result-stack > .result-card:has(.matches-grid),
+.result-stack > .result-card:has(.manual-search-grid) {
+  grid-column: 1 / -1;
+}
+
+/* ================================
+   LOADING RESULT STATE
+================================ */
+
+.loading-card {
+  overflow: hidden;
+}
+
+.loading-bar {
+  position: relative;
+  height: 8px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.loading-bar span {
+  position: absolute;
+  inset: 0;
+  width: 42%;
+  border-radius: 999px;
+  background: #ffcb05;
+  animation: loading-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* ================================
+   DETECTED CARD RESULT
+================================ */
+
+.detected-card-layout {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.database-image-frame {
+  width: 112px;
+}
+
+.database-card-image {
+  display: block;
+  width: 100%;
+  max-height: 170px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.database-card-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 156px;
+  padding: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.detected-card-content h3 {
+  margin-bottom: 12px;
+  font-size: 1.35rem;
+  line-height: 1.18;
+}
+
+.card-meta-list {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.card-meta-list p {
+  margin: 0;
+}
+
+.confidence-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-pill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.14);
+  color: #ffcb05;
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.confidence-text {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+/* ================================
+   COLLAPSIBLE RESULT SECTIONS
+================================ */
+
+.collapsible-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 18px;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.section-toggle span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.section-toggle .result-label {
+  margin-bottom: 0;
+}
+
+.section-toggle strong {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.toggle-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(255, 203, 5, 0.14);
+  color: #ffcb05;
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.collapsible-card > p,
+.collapsible-card > .matches-grid,
+.collapsible-card > .manual-search-grid,
+.collapsible-card > .manual-search-message,
+.collapsible-card > .manual-matches-grid {
+  margin-left: 18px;
+  margin-right: 18px;
+}
+
+.collapsible-card > p {
+  margin-top: 0;
+}
+
+.collapsible-card > .matches-grid,
+.collapsible-card > .manual-matches-grid {
+  margin-bottom: 18px;
+}
+
+/* ================================
+   DISCLAIMER
+================================ */
+
+.disclaimer-box {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 203, 5, 0.25);
+  border-radius: 18px;
+  background: rgba(255, 203, 5, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
