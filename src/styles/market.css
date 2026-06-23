@@ -1,7 +1,62 @@
 /* ================================
    MARKET RESULTS
 ================================ */
+.market-chart-note {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 203, 5, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 203, 5, 0.075);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
 
+.market-price-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.market-price-row {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.market-price-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.market-price-row-top span {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-transform: capitalize;
+}
+
+.market-price-row-top strong {
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.market-visual-bar {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.market-visual-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ffcb05;
+}
 .market-results-card {
   overflow: hidden;
 }
@@ -53,6 +108,100 @@
   font-size: 0.82rem;
 }
 
+.price-history-stack {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.price-history-chart {
+  padding: 14px;
+  border: 1px solid rgba(255, 203, 5, 0.22);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 203, 5, 0.12), transparent 12rem),
+    rgba(255, 255, 255, 0.045);
+}
+
+.price-history-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.price-history-header span {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.price-history-header strong {
+  color: #ffffff;
+}
+
+.price-history-header small {
+  color: #ffcb05;
+  font-weight: 900;
+}
+
+.price-history-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+}
+
+.price-history-chart line {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+
+.price-history-chart polyline {
+  fill: none;
+  stroke: #ffcb05;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.price-history-chart circle {
+  fill: #ffcb05;
+  stroke: #231f20;
+  stroke-width: 2;
+}
+
+.price-history-labels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.price-history-labels span {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+}
+
+.price-history-labels strong {
+  color: #ffcb05;
+  font-size: 0.76rem;
+}
+
+.price-history-chart p {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+}
+
 .market-results-stack {
   display: grid;
   gap: 12px;
@@ -95,50 +244,30 @@
   text-decoration: none;
 }
 
-.market-price-list {
+.market-price-table {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
-.market-price-row {
-  display: grid;
-  gap: 7px;
-  padding: 10px;
-  border-radius: 13px;
-  background: rgba(255, 255, 255, 0.055);
-}
-
-.market-price-row-top {
+.market-price-table-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  align-items: baseline;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
 }
 
-.market-price-row-top span {
+.market-price-table-row span {
   color: rgba(255, 255, 255, 0.66);
   font-size: 0.8rem;
   font-weight: 850;
   text-transform: capitalize;
 }
 
-.market-price-row-top strong {
+.market-price-table-row strong {
   color: #ffffff;
   font-size: 0.95rem;
-}
-
-.market-visual-bar {
-  height: 7px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-}
-
-.market-visual-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #ffcb05;
 }
 
 .market-fallback-section {

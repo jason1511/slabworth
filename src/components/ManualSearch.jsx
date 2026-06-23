@@ -7,81 +7,66 @@ function ManualSearch({
   manualMatches,
   manualSearchMessage,
   isSearchingManual,
-  showManualSearch,
-  onToggle,
   onManualNameChange,
   onManualNumberChange,
   onManualSearch,
   onSelectMatch,
 }) {
   return (
-    <div className="result-card collapsible-card">
-      <button type="button" className="section-toggle" onClick={onToggle}>
-        <span>
-          <span className="result-label">Manual Database Search</span>
-          <strong>Search another card</strong>
-        </span>
+    <>
+      <p>
+        If the detected card is wrong, search by card name, card number, or
+        both.
+      </p>
 
-        <span className="toggle-icon">{showManualSearch ? "−" : "+"}</span>
-      </button>
+      <div className="manual-search-grid">
+        <input
+          type="text"
+          value={manualName}
+          placeholder="Card name, e.g. Pikachu"
+          onChange={(event) => onManualNameChange(event.target.value)}
+        />
 
-      {showManualSearch && (
-        <>
-          <p>
-            If the detected card is wrong, search by card name, card number, or
-            both.
-          </p>
+        <input
+          type="text"
+          value={manualNumber}
+          placeholder="Card number, e.g. 025/165"
+          onChange={(event) => onManualNumberChange(event.target.value)}
+        />
 
-          <div className="manual-search-grid">
-            <input
-              type="text"
-              value={manualName}
-              placeholder="Card name, e.g. Pikachu"
-              onChange={(event) => onManualNameChange(event.target.value)}
-            />
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onManualSearch}
+          disabled={isSearchingManual}
+        >
+          {isSearchingManual ? "Searching..." : "Search Database"}
+        </button>
+      </div>
 
-            <input
-              type="text"
-              value={manualNumber}
-              placeholder="Card number, e.g. 025/165"
-              onChange={(event) => onManualNumberChange(event.target.value)}
-            />
-
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={onManualSearch}
-              disabled={isSearchingManual}
-            >
-              {isSearchingManual ? "Searching..." : "Search Database"}
-            </button>
-          </div>
-
-          {manualSearchMessage && (
-            <p className="manual-search-message">{manualSearchMessage}</p>
-          )}
-
-          {manualMatches.length > 0 && (
-            <div className="matches-grid manual-matches-grid">
-              {manualMatches.map((match) => {
-                const isSelected =
-                  match.id && match.id === result.detectedCard?.databaseId;
-
-                return (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    isSelected={isSelected}
-                    onSelectMatch={onSelectMatch}
-                    altText={match.name || "Manual match"}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </>
+      {manualSearchMessage && (
+        <p className="manual-search-message">{manualSearchMessage}</p>
       )}
-    </div>
+
+      {manualMatches.length > 0 && (
+        <div className="matches-grid manual-matches-grid">
+          {manualMatches.map((match) => {
+            const isSelected =
+              match.id && match.id === result.detectedCard?.databaseId;
+
+            return (
+              <MatchCard
+                key={match.id}
+                match={match}
+                isSelected={isSelected}
+                onSelectMatch={onSelectMatch}
+                altText={match.name || "Manual match"}
+              />
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
 

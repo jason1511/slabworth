@@ -1,8 +1,10 @@
 import {
   formatPrice,
   getMarketLinkUrl,
+  getMarketResultsWithHistory,
   getMarketSummary,
   getPriceBarWidth,
+  getValidPriceHistory,
   getValidPrices,
   hasMarketResults,
 } from "../utils/market";
@@ -50,30 +52,132 @@ function MarketSummary({ marketResults }) {
   );
 }
 
-function MarketPriceRow({ price, maxValue, currency }) {
+function PriceHistoryChart({ marketResult }) {
+  const history = getValidPriceHistory(marketResult);
+
+  if (history.length < 2) {
+    return null;
+  }
+
+  const width = 420;
+  const height = 160;
+  const padding = 22;
+
+  const values = history.map((point) => point.numericValue);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = maxValue - minValue || 1;
+
+  const points = history.map((point, index) => {
+    const x =
+      padding +
+      (index / Math.max(history.length - 1, 1)) * (width - padding * 2);
+
+    const y =
+      height -
+      padding -
+      ((point.numericValue - minValue) / range) * (height - padding * 2);
+
+    return {
+      ...point,
+      x,
+      y,
+    };
+  });
+
+  const polylinePoints = points.map((point) => `${point.x},${point.y}`).join(" ");
+
   return (
-    <div className="market-price-row">
-      <div className="market-price-row-top">
-        <span>{price.label}</span>
-        <strong>{formatPrice(price.numericValue, currency)}</strong>
+    <div className="price-history-chart">
+      <div className="price-history-header">
+        <div>
+          <span>Price trend</span>
+          <strong>{marketResult.marketplace}</strong>
+        </div>
+
+        <small>{marketResult.currency}</small>
       </div>
 
-      <div className="market-visual-bar">
-        <span
-          style={{
-            width: getPriceBarWidth(price.numericValue, maxValue),
-          }}
-        ></span>
+      <svg viewBox={`0 0 ${width} ${height}`} role="img">
+        <line
+          x1={padding}
+          y1={height - padding}
+          x2={width - padding}
+          y2={height - padding}
+        />
+        <line x1={padding} y1={padding} x2={padding} y2={height - padding} />
+
+        <polyline points={polylinePoints} />
+
+        {points.map((point) => (
+          <g key={point.label}>
+            <circle cx={point.x} cy={point.y} r="4" />
+            <title>
+              {point.label}:{" "}
+              {formatPrice(point.numericValue, marketResult.currency)}
+            </title>
+          </g>
+        ))}
+      </svg>
+
+      <div className="price-history-labels">
+        {points.map((point) => (
+          <span key={point.label}>
+            <strong>{point.label}</strong>
+            {formatPrice(point.numericValue, marketResult.currency)}
+          </span>
+        ))}
       </div>
+
+      <p>
+        This source provides trend/history points, so the line chart is shown
+        instead of current-price bars.
+      </p>
+    </div>
+  );
+}
+
+function CurrentPriceBars({ marketResult }) {
+  const prices = getValidPrices(marketResult);
+  const maxValue = Math.max(...prices.map((price) => price.numericValue), 0);
+
+  if (!prices.length) {
+    return null;
+  }
+
+  return (
+    <div className="market-price-bars">
+      {prices.map((price) => (
+        <div
+          className="market-price-row"
+          key={`${marketResult.marketplace}-${price.label}`}
+        >
+          <div className="market-price-row-top">
+            <span>{price.label}</span>
+            <strong>
+              {formatPrice(price.numericValue, marketResult.currency)}
+            </strong>
+          </div>
+
+          <div className="market-visual-bar">
+            <span
+              style={{
+                width: getPriceBarWidth(price.numericValue, maxValue),
+              }}
+            ></span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
 function MarketSourceCard({ result }) {
   const prices = getValidPrices(result);
-  const maxValue = Math.max(...prices.map((price) => price.numericValue), 0);
+  const history = getValidPriceHistory(result);
+  const hasHistory = history.length >= 2;
 
-  if (!prices.length) {
+  if (!prices.length && !hasHistory) {
     return null;
   }
 
@@ -92,16 +196,11 @@ function MarketSourceCard({ result }) {
         )}
       </div>
 
-      <div className="market-price-list">
-        {prices.map((price) => (
-          <MarketPriceRow
-            key={`${result.marketplace}-${price.label}`}
-            price={price}
-            maxValue={maxValue}
-            currency={result.currency}
-          />
-        ))}
-      </div>
+      {hasHistory ? (
+        <PriceHistoryChart marketResult={result} />
+      ) : (
+        <CurrentPriceBars marketResult={result} />
+      )}
     </div>
   );
 }
@@ -138,6 +237,7 @@ function MarketFallbackLinks({ links }) {
 function MarketResults({ result }) {
   const marketResults = result?.marketResults || [];
   const links = result?.links || [];
+  const historicalMarketResults = getMarketResultsWithHistory(marketResults);
 
   return (
     <div className="result-card market-results-card">
@@ -145,6 +245,14 @@ function MarketResults({ result }) {
       <h3>Pricing and marketplace research</h3>
 
       <MarketSummary marketResults={marketResults} />
+
+      {historicalMarketResults.length > 0 && (
+        <div className="market-chart-note">
+          {historicalMarketResults.length} source
+          {historicalMarketResults.length === 1 ? "" : "s"} include trend or
+          price-history points. Sources without history use current-price bars.
+        </div>
+      )}
 
       {hasMarketResults(marketResults) ? (
         <>
@@ -169,9 +277,9 @@ function MarketResults({ result }) {
       )}
 
       <div className="market-disclaimer">
-        Market prices can vary by condition, language, region, seller, grading
-        company, and recent demand. Always compare sold listings before making a
-        selling or grading decision.
+        Line charts are shown only when a public API provides history or trend
+        points. If a source only provides current prices, SlabWorth shows visual
+        price bars instead.
       </div>
     </div>
   );

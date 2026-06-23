@@ -27,7 +27,7 @@ export function createMarketLinks(card) {
       label: "PriceCharting",
       marketplace: "pricecharting",
       query: queryBase,
-      description: "Check historical collector pricing.",
+      description: "Check collector pricing manually.",
     },
     {
       label: "TCGplayer Search",
@@ -107,6 +107,25 @@ export function getValidPrices(marketResult) {
     .filter((price) => !Number.isNaN(price.numericValue));
 }
 
+export function getValidPriceHistory(marketResult) {
+  if (!marketResult?.priceHistory?.length) {
+    return [];
+  }
+
+  return marketResult.priceHistory
+    .map((point) => ({
+      ...point,
+      numericValue: Number(point.value),
+    }))
+    .filter((point) => !Number.isNaN(point.numericValue));
+}
+
+export function getMarketResultsWithHistory(marketResults) {
+  return (marketResults || []).filter(
+    (marketResult) => getValidPriceHistory(marketResult).length >= 2
+  );
+}
+
 export function getAllValidPrices(marketResults) {
   return (marketResults || []).flatMap((marketResult) =>
     getValidPrices(marketResult).map((price) => ({
@@ -141,7 +160,11 @@ export function getMarketSummary(marketResults) {
   const preferredMarketPrice =
     allPrices.find((price) =>
       price.label.toLowerCase().includes("market")
-    ) || lowest;
+    ) ||
+    allPrices.find((price) =>
+      price.label.toLowerCase().includes("trend")
+    ) ||
+    lowest;
 
   return {
     hasPrices: true,
@@ -169,7 +192,6 @@ export function formatPrice(value, currency = "USD") {
     currency,
   }).format(numericValue);
 }
-
 export function getPriceBarWidth(value, maxValue) {
   const numericValue = Number(value);
   const numericMax = Number(maxValue);

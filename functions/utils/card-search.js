@@ -337,6 +337,40 @@ function createPokemonTcgMarketResults(item) {
   return results.filter((result) => result.prices.length > 0);
 }
 
+function createTrendPointsFromTcgdexCardmarket(data) {
+  const points = [];
+
+  if (data.avg30 !== undefined) {
+    points.push({
+      label: "30-day avg",
+      value: data.avg30,
+    });
+  }
+
+  if (data.avg7 !== undefined) {
+    points.push({
+      label: "7-day avg",
+      value: data.avg7,
+    });
+  }
+
+  if (data.avg1 !== undefined) {
+    points.push({
+      label: "1-day avg",
+      value: data.avg1,
+    });
+  }
+
+  if (data.trend !== undefined) {
+    points.push({
+      label: "Trend",
+      value: data.trend,
+    });
+  }
+
+  return points;
+}
+
 function createTcgdexMarketResults(item) {
   const results = [];
 
@@ -366,6 +400,7 @@ function createTcgdexMarketResults(item) {
           value: data.high,
         },
       ].filter((price) => price.value !== undefined),
+      priceHistory: [],
     });
   }
 
@@ -375,26 +410,42 @@ function createTcgdexMarketResults(item) {
     results.push({
       marketplace: "Cardmarket",
       currency: "EUR",
-      description: "Direct price data from TCGdex when available.",
+      description:
+        "Direct price data from TCGdex. Trend points are aggregate 1/7/30-day values, not daily sale history.",
       url: data.url || "",
       prices: [
         {
-          label: "Average sell price",
-          value: data.averageSellPrice,
+          label: "Average",
+          value: data.avg,
         },
         {
-          label: "Low price",
-          value: data.lowPrice,
+          label: "Low",
+          value: data.low,
         },
         {
-          label: "Trend price",
-          value: data.trendPrice,
+          label: "Trend",
+          value: data.trend,
+        },
+        {
+          label: "Average 1 day",
+          value: data.avg1,
+        },
+        {
+          label: "Average 7 days",
+          value: data.avg7,
+        },
+        {
+          label: "Average 30 days",
+          value: data.avg30,
         },
       ].filter((price) => price.value !== undefined),
+      priceHistory: createTrendPointsFromTcgdexCardmarket(data),
     });
   }
 
-  return results.filter((result) => result.prices.length > 0);
+  return results.filter(
+    (result) => result.prices.length > 0 || result.priceHistory.length > 0
+  );
 }
 function buildMarketLinks(card) {
   const cardName = card?.name || "Pokemon card";

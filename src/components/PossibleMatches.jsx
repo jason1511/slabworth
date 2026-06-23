@@ -27,53 +27,34 @@ function MatchCard({ match, isSelected, onSelectMatch, altText }) {
   );
 }
 
-function PossibleMatches({
-  result,
-  showPossibleMatches,
-  onToggle,
-  onSelectMatch,
-}) {
+function PossibleMatches({ result, onSelectMatch }) {
   if (!result.possibleMatches?.length) {
-    return null;
+    return <p>No possible database matches found.</p>;
   }
 
   return (
-    <div className="result-card collapsible-card">
-      <button type="button" className="section-toggle" onClick={onToggle}>
-        <span>
-          <span className="result-label">Possible Matches</span>
-          <strong>{result.possibleMatches.length} database matches found</strong>
-        </span>
+    <>
+      <p>
+        If the detected card is wrong, select the closest database match below.
+      </p>
 
-        <span className="toggle-icon">{showPossibleMatches ? "−" : "+"}</span>
-      </button>
+      <div className="matches-grid">
+        {result.possibleMatches.map((match) => {
+          const isSelected =
+            match.id && match.id === result.detectedCard?.databaseId;
 
-      {showPossibleMatches && (
-        <>
-          <p>
-            If the detected card is wrong, select the closest database match
-            below.
-          </p>
-
-          <div className="matches-grid">
-            {result.possibleMatches.map((match) => {
-              const isSelected =
-                match.id && match.id === result.detectedCard?.databaseId;
-
-              return (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  isSelected={isSelected}
-                  onSelectMatch={onSelectMatch}
-                  altText={match.name || "Possible match"}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
-    </div>
+          return (
+            <MatchCard
+              key={match.id}
+              match={match}
+              isSelected={isSelected}
+              onSelectMatch={onSelectMatch}
+              altText={match.name || "Possible match"}
+            />
+          );
+        })}
+      </div>
+    </>
   );
 }
 

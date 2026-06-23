@@ -52,6 +52,9 @@
   .link-grid,
   .market-summary-grid,
   .market-link-grid,
+  .market-summary-grid,
+.market-link-grid,
+.price-history-labels,
   .breakdown-grid {
     grid-template-columns: 1fr;
   }
