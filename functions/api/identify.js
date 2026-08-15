@@ -5,6 +5,7 @@ import {
 } from "../utils/card-search.js";
 import { cleanupAfterSave } from "../utils/cleanup.js";
 import { createAnalysisId, saveAnalysis } from "../utils/history-store.js";
+import { consumeIdentificationLimit } from "../utils/rate-limit.js";
 import { createImageKey, saveImageToR2 } from "../utils/r2-images.js";
 
 const SUPPORTED_IMAGE_TYPES = [
@@ -13,6 +14,8 @@ const SUPPORTED_IMAGE_TYPES = [
   "image/webp",
   "image/gif",
 ];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_REQUEST_SIZE_BYTES = 21 * 1024 * 1024;
 
 function getImageDataUrl(file, base64) {
   return `data:${file.type};base64,${base64}`;
@@ -45,6 +48,10 @@ function validateImageFile(file, label) {
 
   if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
     return `${label} image must be a JPEG, PNG, WEBP, or GIF image.`;
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    return `${label} image must be 10 MB or smaller.`;
   }
 
   return "";
@@ -284,6 +291,20 @@ export async function onRequestPost(context) {
       );
     }
 
+    const contentLength = Number(
+      context.request.headers.get("Content-Length") || 0
+    );
+
+    if (contentLength > MAX_REQUEST_SIZE_BYTES) {
+      return Response.json(
+        {
+          success: false,
+          message: "The combined upload must be 20 MB or smaller.",
+        },
+        { status: 413 }
+      );
+    }
+
     const formData = await context.request.formData();
 
     const frontImage = formData.get("frontImage");
@@ -324,6 +345,39 @@ export async function onRequestPost(context) {
           { status: 400 }
         );
       }
+    }
+
+    const combinedImageSize = frontImage.size + (backImage?.size || 0);
+
+    if (combinedImageSize > MAX_IMAGE_SIZE_BYTES * 2) {
+      return Response.json(
+        {
+          success: false,
+          message: "The combined upload must be 20 MB or smaller.",
+        },
+        { status: 413 }
+      );
+    }
+
+    const rateLimit = await consumeIdentificationLimit({
+      db,
+      request: context.request,
+      sessionId,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        {
+          success: false,
+          message: rateLimit.message,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
+      );
     }
 
     const analysisId = createAnalysisId();

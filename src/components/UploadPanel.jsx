@@ -10,7 +10,7 @@ function UploadPanel({
       <h2>Upload Card Photos</h2>
       <p>
         Start with the front photo. Add the back photo too for better condition
-        checking.
+        checking. JPEG, PNG, WEBP, or GIF; maximum 10 MB per image.
       </p>
 
       <div className="upload-grid">
@@ -18,7 +18,8 @@ function UploadPanel({
           <span>Front Image</span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={isLoading}
             onChange={(event) => onImageUpload(event, "front")}
           />
         </label>
@@ -27,7 +28,8 @@ function UploadPanel({
           <span>Back Image Optional</span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={isLoading}
             onChange={(event) => onImageUpload(event, "back")}
           />
         </label>

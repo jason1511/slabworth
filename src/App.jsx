@@ -6,6 +6,14 @@ import UploadPanel from "./components/UploadPanel";
 import { getSessionId } from "./utils/session";
 import "./App.css";
 
+const SUPPORTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
 function App() {
   const [sessionId] = useState(() => getSessionId());
 
@@ -100,6 +108,18 @@ function App() {
     const file = event.target.files[0];
 
     if (!file) return;
+
+    if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      setErrorMessage("Please choose a JPEG, PNG, WEBP, or GIF image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setErrorMessage("Each image must be 10 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
 
     setErrorMessage("");
     setManualMatches([]);

@@ -454,14 +454,27 @@ Uploaded images are processed through the backend for AI analysis.
 
 Users should avoid uploading sensitive personal images or unrelated photos.
 
+Client IP addresses are never stored directly. SlabWorth uses SHA-256-hashed
+IP and browser-session keys only to enforce API rate limits, and removes
+expired rate-limit events during later requests.
+
+---
+
+## Cost and Abuse Protection
+
+* JPEG, PNG, WEBP, and GIF uploads are accepted.
+* Each image is limited to 10 MB, with a 20 MB combined limit.
+* Identification is limited to 5 requests per 10 minutes and 20 requests per
+  day for both the browser session and hashed client IP.
+* Invalid uploads are rejected before image storage or OpenAI processing.
+
 ---
 
 ## Future Improvements
 
 Planned or possible improvements:
 
-* Upload size validation and cost protection
-* Cloudflare Turnstile or rate limiting
+* Cloudflare Turnstile for stronger bot protection
 * Better TCGdex language coverage
 * Copy result summary button
 * Shareable result card
