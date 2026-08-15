@@ -67,6 +67,7 @@ function ResultPanel({
   manualMatches,
   manualSearchMessage,
   isSearchingManual,
+  isSavingMatch,
   showPossibleMatches,
   showManualSearch,
   onTogglePossibleMatches,
@@ -164,6 +165,7 @@ function ResultPanel({
               showPossibleMatches={showPossibleMatches}
               onToggle={onTogglePossibleMatches}
               onSelectMatch={onSelectMatch}
+              isSavingMatch={isSavingMatch}
             />
           </ResultSection>
 
@@ -189,6 +191,7 @@ function ResultPanel({
               manualMatches={manualMatches}
               manualSearchMessage={manualSearchMessage}
               isSearchingManual={isSearchingManual}
+              isSavingMatch={isSavingMatch}
               showManualSearch={showManualSearch}
               onToggle={onToggleManualSearch}
               onManualNameChange={onManualNameChange}

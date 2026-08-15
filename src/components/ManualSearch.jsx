@@ -7,6 +7,7 @@ function ManualSearch({
   manualMatches,
   manualSearchMessage,
   isSearchingManual,
+  isSavingMatch,
   onManualNameChange,
   onManualNumberChange,
   onManualSearch,
@@ -38,7 +39,7 @@ function ManualSearch({
           type="button"
           className="secondary-button"
           onClick={onManualSearch}
-          disabled={isSearchingManual}
+          disabled={isSearchingManual || isSavingMatch}
         >
           {isSearchingManual ? "Searching..." : "Search Database"}
         </button>
@@ -59,6 +60,7 @@ function ManualSearch({
                 key={match.id}
                 match={match}
                 isSelected={isSelected}
+                isSavingMatch={isSavingMatch}
                 onSelectMatch={onSelectMatch}
                 altText={match.name || "Manual match"}
               />

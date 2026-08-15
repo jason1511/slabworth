@@ -1,9 +1,26 @@
-function MatchCard({ match, isSelected, onSelectMatch, altText }) {
+function MatchCard({
+  match,
+  isSelected,
+  isSavingMatch,
+  onSelectMatch,
+  altText,
+}) {
+  let actionLabel = "Use this match";
+
+  if (isSelected) {
+    actionLabel = "Selected";
+  }
+
+  if (isSavingMatch) {
+    actionLabel = "Saving...";
+  }
+
   return (
     <button
       type="button"
       className={`match-card ${isSelected ? "selected-match" : ""}`}
       onClick={() => onSelectMatch(match)}
+      disabled={isSavingMatch}
     >
       {match.image && <img src={match.image} alt={altText} />}
 
@@ -20,14 +37,12 @@ function MatchCard({ match, isSelected, onSelectMatch, altText }) {
 
       {match.source && <span className="match-source">{match.source}</span>}
 
-      <span className="match-action">
-        {isSelected ? "Selected" : "Use this match"}
-      </span>
+      <span className="match-action">{actionLabel}</span>
     </button>
   );
 }
 
-function PossibleMatches({ result, onSelectMatch }) {
+function PossibleMatches({ result, isSavingMatch, onSelectMatch }) {
   if (!result.possibleMatches?.length) {
     return <p>No possible database matches found.</p>;
   }
@@ -48,6 +63,7 @@ function PossibleMatches({ result, onSelectMatch }) {
               key={match.id}
               match={match}
               isSelected={isSelected}
+              isSavingMatch={isSavingMatch}
               onSelectMatch={onSelectMatch}
               altText={match.name || "Possible match"}
             />

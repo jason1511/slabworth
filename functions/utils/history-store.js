@@ -155,6 +155,44 @@ export async function getAnalysisById({ db, id, sessionId }) {
   };
 }
 
+export async function updateAnalysisMatch({ db, id, sessionId, result }) {
+  if (!db || !id || !sessionId || !result) {
+    return false;
+  }
+
+  const detectedCard = result.detectedCard || {};
+  const matchStatus = result.matchStatus || {};
+
+  const response = await db
+    .prepare(
+      `
+      UPDATE analyses
+      SET
+        card_name = ?,
+        card_set = ?,
+        card_number = ?,
+        rarity = ?,
+        match_status = ?,
+        result_json = ?
+      WHERE id = ?
+      AND session_id = ?
+      `
+    )
+    .bind(
+      safeString(detectedCard.name),
+      safeString(detectedCard.set),
+      safeString(detectedCard.number),
+      safeString(detectedCard.rarity),
+      safeString(matchStatus.status),
+      JSON.stringify(result),
+      id,
+      sessionId
+    )
+    .run();
+
+  return Number(response.meta?.changes || 0) > 0;
+}
+
 export async function getOldAnalysesForSession({
   db,
   sessionId,

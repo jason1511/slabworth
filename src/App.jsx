@@ -3,7 +3,6 @@ import HistoryPanel from "./components/HistoryPanel";
 import PreviewPanel from "./components/PreviewPanel";
 import ResultPanel from "./components/ResultPanel";
 import UploadPanel from "./components/UploadPanel";
-import { createMarketLinks } from "./utils/market";
 import { getSessionId } from "./utils/session";
 import "./App.css";
 
@@ -24,6 +23,7 @@ function App() {
   const [manualMatches, setManualMatches] = useState([]);
   const [isSearchingManual, setIsSearchingManual] = useState(false);
   const [manualSearchMessage, setManualSearchMessage] = useState("");
+  const [isSavingMatch, setIsSavingMatch] = useState(false);
 
   const [showPossibleMatches, setShowPossibleMatches] = useState(true);
   const [showManualSearch, setShowManualSearch] = useState(false);
@@ -167,31 +167,57 @@ function App() {
     }
   }
 
-  function handleSelectMatch(match) {
-    setResult((currentResult) => {
-      if (!currentResult) return currentResult;
+  async function handleSelectMatch(match) {
+    const analysisId = result?.analysis?.id;
 
-      return {
+    if (!analysisId || isSavingMatch) {
+      return;
+    }
+
+    setIsSavingMatch(true);
+    setResult((currentResult) => ({
+      ...currentResult,
+      matchStatus: {
+        ...(currentResult?.matchStatus || {}),
+        message: "Saving your selected database match...",
+      },
+    }));
+
+    try {
+      const response = await fetch("/api/history", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: analysisId,
+          sessionId,
+          match,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to save the selected match.");
+      }
+
+      setResult(data.result);
+      await loadHistory();
+    } catch (error) {
+      console.error(error);
+      setResult((currentResult) => ({
         ...currentResult,
-        detectedCard: {
-          ...currentResult.detectedCard,
-          name: match.name,
-          set: match.set,
-          number: match.number,
-          rarity: match.rarity,
-          databaseId: match.id,
-          databaseImage: match.image,
-          tcgplayerUrl: match.tcgplayerUrl,
-          cardmarketUrl: match.cardmarketUrl,
-        },
         matchStatus: {
-          status: "confirmed",
-          message: "Database match selected by user.",
+          status: "needs_confirmation",
+          message:
+            error.message ||
+            "The selected match could not be saved. Please try again.",
         },
-        marketResults: match.marketResults || [],
-        links: createMarketLinks(match),
-      };
-    });
+      }));
+    } finally {
+      setIsSavingMatch(false);
+    }
   }
 
   async function handleManualSearch() {
@@ -277,6 +303,7 @@ function App() {
           manualMatches={manualMatches}
           manualSearchMessage={manualSearchMessage}
           isSearchingManual={isSearchingManual}
+          isSavingMatch={isSavingMatch}
           showPossibleMatches={showPossibleMatches}
           showManualSearch={showManualSearch}
           onTogglePossibleMatches={() =>
