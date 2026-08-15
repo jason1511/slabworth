@@ -1,368 +1,110 @@
-# SlabWorth — AI Pokémon Card Identifier & Grade Estimator
+# SlabWorth
 
-SlabWorth is a web-based tool that helps users identify Pokémon cards from uploaded photos, estimate visible card condition, and research where to buy or sell the card online.
+AI-assisted Pokémon card identification, condition estimation, and market research in one serverless web application.
 
-The app is designed as a portfolio project that combines AI image analysis, public trading card APIs, condition scoring logic, and marketplace research links into one practical workflow.
+[![CI](https://github.com/jason1511/slabworth/actions/workflows/ci.yml/badge.svg)](https://github.com/jason1511/slabworth/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20D1%20%2B%20R2-F38020?logo=cloudflare&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES%20Modules-F7DF1E?logo=javascript&logoColor=black)
 
-> This tool provides an AI-assisted estimate only. It is not an official PSA, CGC, or Beckett grade.
+SlabWorth turns front and optional back photos of a Pokémon card into a structured identification and visible-condition report. It combines AI image analysis with multiple card databases, explains uncertain matches instead of hiding them, and gives collectors practical links and price indicators for further research.
 
----
+> SlabWorth is a portfolio and decision-support project. Its condition estimate is not an official PSA, CGC, or Beckett grade, and its market data is not a valuation guarantee.
 
-## Live Demo
+## Highlights
 
-Add your deployed Cloudflare Pages link here:
+- Identifies card name, number, set, language, and visible characteristics from uploaded photos.
+- Searches Pokémon TCG API plus English and Japanese TCGdex data.
+- Scores and ranks possible matches as strong, medium, or weak.
+- Lets users manually search and correct uncertain matches.
+- Persists analyses and later match corrections in Cloudflare D1.
+- Stores uploaded card images in Cloudflare R2 and restores them through history.
+- Estimates overall condition and separate centering, corner, edge, surface, and back scores.
+- Reports photo-quality problems such as glare, blur, cropping, and missing views.
+- Keeps USD and EUR market summaries separate and labels historical indicators honestly.
+- Rejects invalid or oversized uploads before AI processing.
+- Protects the paid identification endpoint with session and hashed-IP rate limits.
+- Runs linting, five automated tests, and a production build in GitHub Actions.
 
-```text
-https://your-slabworth-site.pages.dev
-```
+## Why this project matters
 
----
+The interesting problem is not simply calling an AI model. Card identification is uncertain: artwork can repeat, set numbers can be hard to read, regional variants differ, and a visually plausible answer can still be wrong.
 
-## Project Overview
+SlabWorth handles that uncertainty as part of the product design:
 
-Trading card collectors often need to answer a few questions quickly:
+1. AI extracts visible clues from the photos.
+2. Independent card APIs provide candidate records.
+3. Match scoring compares names, numbers, sets, and languages.
+4. Only strong results are automatically treated as confirmed.
+5. The user can inspect alternatives, search manually, and persist a correction.
 
-* What exact card do I have?
-* Is this card in good condition?
-* Is it worth grading?
-* Where can I research the raw or graded value?
-* What if the AI gets the card wrong?
+This creates a more trustworthy workflow than presenting the first AI response as fact.
 
-SlabWorth addresses those questions by allowing users to upload a front image and optional back image of a Pokémon card. The app then uses AI vision to extract visible card details, searches multiple public card databases, estimates card condition, and generates marketplace research links.
-
----
-
-## Key Features
-
-### Card Photo Upload
-
-Users can upload:
-
-* Front card image
-* Optional back card image
-
-The app previews the uploaded images before analysis.
-
----
-
-### AI Card Identification
-
-The backend sends the uploaded image to an OpenAI vision-capable model to extract visible card details, including:
-
-* Card name
-* Card number
-* Set hint
-* Language
-* Visible condition issues
-* Identification confidence
-
----
-
-### Multi-Source Card Database Search
-
-SlabWorth uses multiple public Pokémon card data sources to reduce misidentification:
-
-* Pokémon TCG API
-* TCGdex English
-* TCGdex Japanese
-
-The backend combines results, removes duplicates, scores possible matches, and only auto-confirms strong database matches.
-
----
-
-### Safer Match Confirmation Logic
-
-Instead of blindly accepting the first database result, the app classifies matches as:
-
-* Strong match
-* Medium match
-* Weak match
-
-If no strong match is found, the app keeps the AI-detected card visible and asks the user to confirm manually.
-
-This reduces the chance of showing the wrong card as a confirmed match.
-
----
-
-### Possible Matches UI
-
-If multiple possible card matches are found, the user can choose the correct one manually.
-
-Each match can show:
-
-* Card image
-* Card name
-* Set name
-* Card number
-* Rarity
-* Match score
-* Match strength
-* Data source
-
----
-
-### Manual Database Search
-
-If the AI or automatic database matching is wrong, the user can manually search by:
-
-* Card name
-* Card number
-* Both card name and number
-
-This makes the app more reliable for:
-
-* Japanese cards
-* Older cards
-* Blurry photos
-* Cards with hard-to-read set numbers
-* Cards not found by the first database query
-
----
-
-### Condition Grade Estimate
-
-SlabWorth estimates visible condition on a 1–10 scale.
-
-Example:
+## Architecture
 
 ```text
-Condition Grade: 7 / 10
-Label: Lightly Played
-Confidence: Medium
+React + Vite client
+       |
+       | multipart images / JSON
+       v
+Cloudflare Pages Functions
+  |         |            |
+  |         |            +--> D1: analysis history + rate-limit events
+  |         +---------------> R2: uploaded card images
+  +-------------------------> OpenAI + Pokémon TCG API + TCGdex
 ```
 
-The grading labels include:
+The browser receives a generated anonymous session ID. History queries and manual corrections are scoped to that session. Raw client IP addresses are never stored; the rate limiter stores SHA-256-derived keys with timestamps.
 
-* Gem Mint Candidate
-* Mint Candidate
-* Near Mint Candidate
-* Lightly Played
-* Moderately Played
-* Heavily Played
-* Damaged
-* Unable to Estimate
+## Technology
 
----
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 19, Vite 8, CSS |
+| Serverless API | Cloudflare Pages Functions |
+| AI analysis | OpenAI API |
+| Card data | Pokémon TCG API, TCGdex |
+| Persistence | Cloudflare D1 |
+| Image storage | Cloudflare R2 |
+| Quality | Node test runner, ESLint, GitHub Actions |
 
-### Condition Breakdown
+## Main API routes
 
-The app gives a structured breakdown of visible condition areas:
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/api/identify` | `POST` | Validate photos, enforce limits, run AI analysis, search card APIs, and save the result |
+| `/api/search-card` | `POST` | Search card databases manually by name and/or number |
+| `/api/history` | `GET` | List a session's analyses or load one saved analysis |
+| `/api/history` | `PATCH` | Persist a manually selected card match |
+| `/api/image/:key` | `GET` | Return a stored R2 image used by saved history |
 
-* Centering
-* Corners
-* Edges
-* Surface
-* Back condition
-
-Example:
-
-```text
-Centering: 7 / 10
-Corners: 8 / 10
-Edges: 7 / 10
-Surface: 8 / 10
-Back: N/A
-```
-
-The overall score is intended to be conservative and based on the weakest visible areas, not just a simple average.
-
----
-
-### Photo Quality Check
-
-The app also evaluates whether the uploaded image is good enough for reliable analysis.
-
-Photo quality ratings include:
-
-* Good
-* Acceptable
-* Poor
-* Unable to Judge
-
-The app can identify issues such as:
-
-* Blur
-* Glare
-* Missing back image
-* Cropped card edges
-* Low resolution
-* Bad lighting
-* Sleeve reflection
-* Tilted photo
-
-It also provides recommendations for taking a better photo.
-
----
-
-### Worth Grading Recommendation
-
-SlabWorth provides a basic decision-support recommendation:
-
-* Likely Worth Checking
-* Maybe Worth Checking
-* Maybe
-* Probably Not
-* Not Recommended
-* Check Manually
-* Unable to Decide
-
-The recommendation considers:
-
-* Estimated condition grade
-* Rarity
-* Whether the card was confidently matched to a database result
-
-This is not a financial guarantee. It is meant to guide further research.
-
----
-
-### Marketplace Research Links
-
-The app generates market research links such as:
-
-* eBay Raw
-* eBay PSA 8
-* eBay PSA 9
-* eBay PSA 10
-* TCGplayer, if available from the database
-* Cardmarket, if available from the database
-
-This helps users research both raw and graded versions of the card.
-
----
-
-## Tech Stack
-
-### Frontend
-
-* React
-* Vite
-* JavaScript
-* CSS
-
-### Backend
-
-* Cloudflare Pages Functions
-* OpenAI API
-* Pokémon TCG API
-* TCGdex API
-
-### Deployment
-
-* Cloudflare Pages
-
----
-
-## Project Structure
+## Repository structure
 
 ```text
 slabworth/
-├─ public/
-├─ src/
-│  ├─ App.jsx
-│  ├─ App.css
-│  ├─ index.css
-│  └─ main.jsx
-├─ functions/
-│  ├─ api/
-│  │  ├─ identify.js
-│  │  └─ search-card.js
-│  └─ utils/
-│     └─ card-search.js
-├─ index.html
-├─ package.json
-├─ vite.config.js
-├─ wrangler.toml
-└─ README.md
+├── .github/workflows/ci.yml
+├── functions/
+│   ├── api/                 # Pages Function endpoints
+│   └── utils/               # search, persistence, storage, cleanup, rate limiting
+├── migrations/              # D1 schema migrations
+├── public/
+├── src/
+│   ├── components/          # upload, results, market, matches, and history UI
+│   ├── styles/
+│   └── utils/
+├── test/                    # Node-based unit tests
+├── wrangler.toml
+└── package.json
 ```
 
----
+## Run locally
 
-## How It Works
+### Requirements
 
-```text
-User uploads card photo
-↓
-Frontend sends image to Cloudflare Pages Function
-↓
-OpenAI extracts visible card details
-↓
-Backend searches Pokémon TCG API and TCGdex
-↓
-Results are scored and ranked
-↓
-Strong matches are auto-confirmed
-↓
-Medium/weak matches require user confirmation
-↓
-Condition score, photo quality, and worth-grading recommendation are shown
-↓
-Marketplace research links are generated
-```
-
----
-
-## API Flow
-
-### `/api/identify`
-
-Receives uploaded front and optional back images.
-
-Responsibilities:
-
-* Validate uploaded image files
-* Convert images to base64 data URLs
-* Send image data to OpenAI
-* Parse AI-generated JSON
-* Search public card databases
-* Score possible matches
-* Return final card result
-
----
-
-### `/api/search-card`
-
-Receives manual card search input.
-
-Responsibilities:
-
-* Accept card name and/or card number
-* Search Pokémon TCG API and TCGdex
-* Score possible matches
-* Return selectable database results
-
----
-
-## Environment Variables
-
-Create a `.dev.vars` file for local development:
-
-```env
-OPENAI_API_KEY=your_openai_api_key_here
-```
-
-Do not commit `.dev.vars`.
-
-Recommended `.gitignore` entries:
-
-```gitignore
-node_modules
-dist
-.dev.vars
-.env
-.env.local
-.wrangler
-```
-
-For Cloudflare Pages deployment, add the same environment variable in the Cloudflare dashboard:
-
-```text
-OPENAI_API_KEY
-```
-
----
-
-## Local Development
+- Node.js 24
+- npm
+- A Cloudflare account for full D1/R2 integration
+- An OpenAI API key for identification
 
 Install dependencies:
 
@@ -370,160 +112,104 @@ Install dependencies:
 npm install
 ```
 
-Run the Vite frontend only:
+Create `.dev.vars` in the repository root:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+```
+
+Never commit `.dev.vars` or API keys.
+
+Apply the D1 migrations to the local database:
+
+```bash
+npx wrangler d1 migrations apply slabworth-history --local
+```
+
+Run the frontend alone for UI work:
 
 ```bash
 npm run dev
 ```
 
-Run the automated test suite:
-
-```bash
-npm test
-```
-
-Run Cloudflare Pages locally with Functions:
+Run the production build with local Pages Functions:
 
 ```bash
 npm run pages:dev
 ```
 
-Build the project:
+The full identification flow needs the D1 and R2 bindings declared in `wrangler.toml`. Use separate development resources rather than production data when changing persistence behaviour.
+
+## Test and build
 
 ```bash
+npm test
+npm run lint -- --max-warnings=0
 npm run build
 ```
 
-Preview the production build locally:
+The current tests cover:
 
-```bash
-npm run preview
-```
+- currency-safe market summaries and invalid market-data filtering;
+- saving and updating analysis history;
+- session isolation when a correction is persisted;
+- burst and daily identification limits; and
+- hashing rate-limit identities instead of storing raw IP addresses.
 
----
+GitHub Actions repeats all three checks on every push to `main` and every pull request.
 
-## Example `package.json` Scripts
+## Deploy to Cloudflare Pages
 
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "pages:dev": "vite build && wrangler pages dev dist --compatibility-date=2026-06-05",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  }
-}
-```
-
----
-
-## Deployment
-
-This project is designed for Cloudflare Pages.
-
-Recommended settings:
+Use these build settings:
 
 ```text
-Framework preset: Vite
 Build command: npm run build
 Build output directory: dist
 Root directory: /
 ```
 
-Cloudflare Pages Functions are automatically deployed from the `functions` directory.
+Before deploying:
 
-After adding environment variables, redeploy the project from Cloudflare Pages.
+1. Create the D1 database and R2 bucket named in `wrangler.toml`, or update the bindings to your own resources.
+2. Apply the D1 migrations remotely:
 
----
+   ```bash
+   npx wrangler d1 migrations apply slabworth-history --remote
+   ```
 
-## Limitations
+3. Add `OPENAI_API_KEY` as an encrypted Cloudflare environment variable.
+4. Deploy the `main` branch through Cloudflare Pages.
 
-SlabWorth is not an official grading service.
+## Safety and limits
 
-The app cannot guarantee:
+- Accepted formats: JPEG, PNG, WebP, and GIF.
+- Maximum size: 10 MB per image and 20 MB combined.
+- Identification limit: 5 requests per 10 minutes and 20 per 24 hours.
+- Limits apply to both the anonymous browser session and a hashed client-IP key.
+- Invalid uploads are rejected before R2 storage or OpenAI processing.
+- History cleanup removes older saved analyses and their associated images.
 
-* Official PSA, CGC, or Beckett grade
-* Card authenticity
-* Exact market value
-* Perfect identification from blurry or partial photos
-* Accurate grading if the back image is missing
-* Correct match for every Japanese or uncommon card variant
+## Known limitations
 
-The app should be treated as a research and decision-support tool, not a final authority.
+- A photograph cannot reliably prove authenticity or reveal every physical defect.
+- Sleeve glare, blur, cropping, lighting, and a missing back photo reduce grading confidence.
+- Market APIs may provide current prices or historical indicators, but not a complete sold-listing history.
+- Uncommon, promotional, Japanese, or newly released variants may still need manual confirmation.
+- The current database integrations focus on Pokémon cards.
 
----
+## Roadmap
 
-## Privacy Notes
-
-Uploaded images are processed through the backend for AI analysis.
-
-Users should avoid uploading sensitive personal images or unrelated photos.
-
-Client IP addresses are never stored directly. SlabWorth uses SHA-256-hashed
-IP and browser-session keys only to enforce API rate limits, and removes
-expired rate-limit events during later requests.
-
----
-
-## Cost and Abuse Protection
-
-* JPEG, PNG, WEBP, and GIF uploads are accepted.
-* Each image is limited to 10 MB, with a 20 MB combined limit.
-* Identification is limited to 5 requests per 10 minutes and 20 requests per
-  day for both the browser session and hashed client IP.
-* Invalid uploads are rejected before image storage or OpenAI processing.
-
----
-
-## Future Improvements
-
-Planned or possible improvements:
-
-* Cloudflare Turnstile for stronger bot protection
-* Better TCGdex language coverage
-* Copy result summary button
-* Shareable result card
-* Better pricing estimate
-* Sold-listing comparison
-* Card authenticity warning system
-* Cropping and auto-rotation
-* Support for other TCGs such as Yu-Gi-Oh!, Magic: The Gathering, One Piece, and Lorcana
-
----
-
-## Why I Built This
-
-I built SlabWorth as a portfolio project to demonstrate:
-
-* AI-assisted product development
-* Image input handling
-* Serverless API architecture
-* Public API integration
-* Multi-source search and match scoring
-* Practical UX for uncertain AI results
-* Frontend state management
-* Cloudflare deployment workflow
-
-The project focuses on building a realistic tool where AI is helpful but not blindly trusted. Instead of forcing one answer, the app gives confidence levels, possible matches, manual correction, and clear limitations.
-
----
+- Add one more trading card game through a reusable multi-TCG provider layer.
+- Add Cloudflare Turnstile for stronger automated-abuse protection.
+- Improve image cropping, rotation, and capture guidance.
+- Expand tests around card-match scoring and API validation.
+- Add shareable, privacy-conscious result summaries.
 
 ## Author
 
-Jason Leonard
-
-Bachelor of Information and Communication Technology
-Software Technology
-
----
+Jason Leonard<br>
+Bachelor of Information and Communication Technology — Software Technology
 
 ## Disclaimer
 
-SlabWorth is an independent educational and portfolio project.
-
-It is not affiliated with, endorsed by, or sponsored by The Pokémon Company, PSA, CGC, Beckett, TCGplayer, Cardmarket, eBay, OpenAI, Cloudflare, Pokémon TCG API, or TCGdex.
-
-All trademarks and card images belong to their respective owners.
-
-The condition grade shown by this app is an AI-assisted estimate only and should not be treated as an official card grade.
+SlabWorth is an independent educational and portfolio project. It is not affiliated with or endorsed by The Pokémon Company, PSA, CGC, Beckett, TCGplayer, Cardmarket, eBay, OpenAI, Cloudflare, Pokémon TCG API, or TCGdex. All trademarks and card images belong to their respective owners.

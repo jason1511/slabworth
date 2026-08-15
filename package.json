@@ -2,6 +2,26 @@
   "name": "slabworth",
   "private": true,
   "version": "0.0.0",
+  "description": "AI-assisted Pokémon card identification, condition estimation, and market research.",
+  "author": "Jason Leonard",
+  "homepage": "https://github.com/jason1511/slabworth",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jason1511/slabworth.git"
+  },
+  "keywords": [
+    "pokemon",
+    "trading-cards",
+    "computer-vision",
+    "openai",
+    "react",
+    "cloudflare-pages",
+    "cloudflare-d1",
+    "cloudflare-r2"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
