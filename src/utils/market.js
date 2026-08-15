@@ -100,29 +100,41 @@ export function getValidPrices(marketResult) {
   }
 
   return marketResult.prices
+    .filter(
+      (price) =>
+        price.value !== null &&
+        price.value !== undefined &&
+        price.value !== ""
+    )
     .map((price) => ({
       ...price,
       numericValue: Number(price.value),
     }))
-    .filter((price) => !Number.isNaN(price.numericValue));
+    .filter((price) => Number.isFinite(price.numericValue));
 }
 
-export function getValidPriceHistory(marketResult) {
+export function getValidTrendIndicators(marketResult) {
   if (!marketResult?.priceHistory?.length) {
     return [];
   }
 
   return marketResult.priceHistory
+    .filter(
+      (point) =>
+        point.value !== null &&
+        point.value !== undefined &&
+        point.value !== ""
+    )
     .map((point) => ({
       ...point,
       numericValue: Number(point.value),
     }))
-    .filter((point) => !Number.isNaN(point.numericValue));
+    .filter((point) => Number.isFinite(point.numericValue));
 }
 
-export function getMarketResultsWithHistory(marketResults) {
+export function getMarketResultsWithTrendIndicators(marketResults) {
   return (marketResults || []).filter(
-    (marketResult) => getValidPriceHistory(marketResult).length >= 2
+    (marketResult) => getValidTrendIndicators(marketResult).length >= 2
   );
 }
 
@@ -142,37 +154,46 @@ export function getMarketSummary(marketResults) {
   if (!allPrices.length) {
     return {
       hasPrices: false,
-      sourceCount: marketResults?.length || 0,
       priceCount: 0,
-      lowest: null,
-      highest: null,
-      bestMarket: null,
+      currencyGroups: [],
     };
   }
 
-  const sortedPrices = [...allPrices].sort(
-    (a, b) => a.numericValue - b.numericValue
-  );
+  const pricesByCurrency = allPrices.reduce((groups, price) => {
+    const currency = price.currency || "USD";
+    const currencyPrices = groups.get(currency) || [];
 
-  const lowest = sortedPrices[0];
-  const highest = sortedPrices[sortedPrices.length - 1];
+    currencyPrices.push(price);
+    groups.set(currency, currencyPrices);
 
-  const preferredMarketPrice =
-    allPrices.find((price) =>
-      price.label.toLowerCase().includes("market")
-    ) ||
-    allPrices.find((price) =>
-      price.label.toLowerCase().includes("trend")
-    ) ||
-    lowest;
+    return groups;
+  }, new Map());
+
+  const currencyGroups = Array.from(pricesByCurrency, ([currency, prices]) => {
+    const sortedPrices = [...prices].sort(
+      (a, b) => a.numericValue - b.numericValue
+    );
+    const lowest = sortedPrices[0];
+    const highest = sortedPrices[sortedPrices.length - 1];
+    const bestMarket =
+      prices.find((price) => price.label.toLowerCase().includes("market")) ||
+      prices.find((price) => price.label.toLowerCase().includes("trend")) ||
+      lowest;
+
+    return {
+      currency,
+      sourceCount: new Set(prices.map((price) => price.marketplace)).size,
+      priceCount: prices.length,
+      lowest,
+      highest,
+      bestMarket,
+    };
+  }).sort((a, b) => a.currency.localeCompare(b.currency));
 
   return {
     hasPrices: true,
-    sourceCount: marketResults.length,
     priceCount: allPrices.length,
-    lowest,
-    highest,
-    bestMarket: preferredMarketPrice,
+    currencyGroups,
   };
 }
 

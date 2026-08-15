@@ -1,10 +1,10 @@
 import {
   formatPrice,
   getMarketLinkUrl,
-  getMarketResultsWithHistory,
+  getMarketResultsWithTrendIndicators,
   getMarketSummary,
   getPriceBarWidth,
-  getValidPriceHistory,
+  getValidTrendIndicators,
   getValidPrices,
   hasMarketResults,
 } from "../utils/market";
@@ -24,38 +24,43 @@ function MarketSummary({ marketResults }) {
 
   return (
     <div className="market-summary-grid">
-      <div className="market-summary-card highlight">
-        <span>Best market indicator</span>
-        <strong>
-          {formatPrice(
-            summary.bestMarket.numericValue,
-            summary.bestMarket.currency
-          )}
-        </strong>
-        <p>
-          {summary.bestMarket.marketplace} · {summary.bestMarket.label}
-        </p>
-      </div>
+      {summary.currencyGroups.map((group) => (
+        <div
+          className="market-summary-card highlight"
+          key={`${group.currency}-indicator`}
+        >
+          <span>{group.currency} market indicator</span>
+          <strong>
+            {formatPrice(group.bestMarket.numericValue, group.currency)}
+          </strong>
+          <p>
+            {group.bestMarket.marketplace} · {group.bestMarket.label}
+          </p>
+        </div>
+      ))}
 
-      <div className="market-summary-card">
-        <span>Observed range</span>
-        <strong>
-          {formatPrice(summary.lowest.numericValue, summary.lowest.currency)} —{" "}
-          {formatPrice(summary.highest.numericValue, summary.highest.currency)}
-        </strong>
-        <p>
-          Based on {summary.priceCount} price points from {summary.sourceCount}{" "}
-          source{summary.sourceCount === 1 ? "" : "s"}.
-        </p>
-      </div>
+      {summary.currencyGroups.map((group) => (
+        <div className="market-summary-card" key={`${group.currency}-range`}>
+          <span>{group.currency} observed range</span>
+          <strong>
+            {formatPrice(group.lowest.numericValue, group.currency)} —{" "}
+            {formatPrice(group.highest.numericValue, group.currency)}
+          </strong>
+          <p>
+            Based on {group.priceCount} price points from {group.sourceCount}{" "}
+            source{group.sourceCount === 1 ? "" : "s"}. Currencies are never
+            combined.
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
-function PriceHistoryChart({ marketResult }) {
-  const history = getValidPriceHistory(marketResult);
+function TrendIndicatorChart({ marketResult }) {
+  const indicators = getValidTrendIndicators(marketResult);
 
-  if (history.length < 2) {
+  if (indicators.length < 2) {
     return null;
   }
 
@@ -63,15 +68,15 @@ function PriceHistoryChart({ marketResult }) {
   const height = 160;
   const padding = 22;
 
-  const values = history.map((point) => point.numericValue);
+  const values = indicators.map((point) => point.numericValue);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue || 1;
 
-  const points = history.map((point, index) => {
+  const points = indicators.map((point, index) => {
     const x =
       padding +
-      (index / Math.max(history.length - 1, 1)) * (width - padding * 2);
+      (index / Math.max(indicators.length - 1, 1)) * (width - padding * 2);
 
     const y =
       height -
@@ -91,14 +96,18 @@ function PriceHistoryChart({ marketResult }) {
     <div className="price-history-chart">
       <div className="price-history-header">
         <div>
-          <span>Price trend</span>
+          <span>Aggregate market indicators</span>
           <strong>{marketResult.marketplace}</strong>
         </div>
 
         <small>{marketResult.currency}</small>
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} role="img">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${marketResult.marketplace} aggregate market indicator comparison`}
+      >
         <line
           x1={padding}
           y1={height - padding}
@@ -130,8 +139,8 @@ function PriceHistoryChart({ marketResult }) {
       </div>
 
       <p>
-        This source provides trend/history points, so the line chart is shown
-        instead of current-price bars.
+        These points compare rolling averages and the source's current trend
+        indicator. They are not dated sales or a chronological price history.
       </p>
     </div>
   );
@@ -174,10 +183,10 @@ function CurrentPriceBars({ marketResult }) {
 
 function MarketSourceCard({ result }) {
   const prices = getValidPrices(result);
-  const history = getValidPriceHistory(result);
-  const hasHistory = history.length >= 2;
+  const trendIndicators = getValidTrendIndicators(result);
+  const hasTrendIndicators = trendIndicators.length >= 2;
 
-  if (!prices.length && !hasHistory) {
+  if (!prices.length && !hasTrendIndicators) {
     return null;
   }
 
@@ -196,8 +205,8 @@ function MarketSourceCard({ result }) {
         )}
       </div>
 
-      {hasHistory ? (
-        <PriceHistoryChart marketResult={result} />
+      {hasTrendIndicators ? (
+        <TrendIndicatorChart marketResult={result} />
       ) : (
         <CurrentPriceBars marketResult={result} />
       )}
@@ -237,7 +246,7 @@ function MarketFallbackLinks({ links }) {
 function MarketResults({ result }) {
   const marketResults = result?.marketResults || [];
   const links = result?.links || [];
-  const historicalMarketResults = getMarketResultsWithHistory(marketResults);
+  const trendMarketResults = getMarketResultsWithTrendIndicators(marketResults);
 
   return (
     <div className="result-card market-results-card">
@@ -246,11 +255,12 @@ function MarketResults({ result }) {
 
       <MarketSummary marketResults={marketResults} />
 
-      {historicalMarketResults.length > 0 && (
+      {trendMarketResults.length > 0 && (
         <div className="market-chart-note">
-          {historicalMarketResults.length} source
-          {historicalMarketResults.length === 1 ? "" : "s"} include trend or
-          price-history points. Sources without history use current-price bars.
+          {trendMarketResults.length} source
+          {trendMarketResults.length === 1 ? "" : "s"} include aggregate trend
+          indicators. These are comparisons of rolling averages, not dated
+          sales history. Sources without them use current-price bars.
         </div>
       )}
 
@@ -277,9 +287,10 @@ function MarketResults({ result }) {
       )}
 
       <div className="market-disclaimer">
-        Line charts are shown only when a public API provides history or trend
-        points. If a source only provides current prices, SlabWorth shows visual
-        price bars instead.
+        Indicator charts are shown only when a public API provides multiple
+        rolling averages or trend values. SlabWorth does not currently display
+        chronological sold-price history. Sources with current prices only use
+        visual price bars.
       </div>
     </div>
   );
