@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import HistoryPanel from "./components/HistoryPanel";
 import PreviewPanel from "./components/PreviewPanel";
 import ResultPanel from "./components/ResultPanel";
@@ -40,7 +40,7 @@ function App() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyMessage, setHistoryMessage] = useState("");
 
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     setIsLoadingHistory(true);
     setHistoryMessage("");
 
@@ -63,7 +63,7 @@ function App() {
     } finally {
       setIsLoadingHistory(false);
     }
-  }
+  }, [sessionId]);
 
   async function loadHistoryItem(id) {
     setIsLoading(true);
@@ -102,7 +102,7 @@ function App() {
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [loadHistory]);
 
   function handleImageUpload(event, imageType) {
     const file = event.target.files[0];

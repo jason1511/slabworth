@@ -376,6 +376,12 @@ Run the Vite frontend only:
 npm run dev
 ```
 
+Run the automated test suite:
+
+```bash
+npm test
+```
+
 Run Cloudflare Pages locally with Functions:
 
 ```bash
